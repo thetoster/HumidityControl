@@ -36,13 +36,22 @@
 #ifndef Prefs_hpp
 #define Prefs_hpp
 
+struct SavedPrefs {
+    uint8_t crc;
+    char ssid[60];
+    char password[60];
+    int8_t humidityTrigger;
+    int8_t secondsToStoreMeasurements;
+};
+
 class Prefs {
   public:
-    String ssid;
-    String password;
-    int8_t humidityTrigger;
+    SavedPrefs storage;
     Prefs();
     void save();
+  private:
+    uint8_t calcCRC();
+    void defaultValues();
 };
 
 #endif /* Prefs_hpp */

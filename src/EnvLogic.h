@@ -37,10 +37,14 @@
 #define EnvLogic_hpp
 
 #include <SHT21.h>
+#include <vector>
 #include "Prefs.h"
+#include "Measurement.h"
 
 class EnvLogic {
   public:
+    std::vector<Measurement> measurements;
+
     EnvLogic(Prefs* prefs);
     void update();
     void setMaxAllowedHum(int hum);
@@ -57,6 +61,9 @@ class EnvLogic {
     int lastHum;
     int maxAllowedHum;
     long turnOnFanMillis;
+    long lastMeasurementMillis;
+
+    void addMeasurement(long mil);
 };
 
 #endif /* EnvLogic_hpp */

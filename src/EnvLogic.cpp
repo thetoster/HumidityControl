@@ -35,13 +35,15 @@
  */
 #include <EnvLogic.h>
 
+static const int totalMeasurementMemoryLimit = 10*1024;
+
 EnvLogic::EnvLogic(Prefs* prefs): prefs(prefs),
-  lastTemp(0), lastHum(0), maxAllowedHum(prefs->humidityTrigger),
-  turnOnFanMillis(0) {
+  lastTemp(0), lastHum(0), maxAllowedHum(prefs->storage.humidityTrigger),
+  turnOnFanMillis(0), lastMeasurementMillis(0) {
 }
 
 void EnvLogic::reloadPrefs() {
-  maxAllowedHum = prefs->humidityTrigger;
+  maxAllowedHum = prefs->storage.humidityTrigger;
 }
 
 void EnvLogic::update() {
@@ -57,6 +59,21 @@ void EnvLogic::update() {
   } else if (isFanEnabled() == false) {
     digitalWrite(6, LOW);
   }
+
+  //store new measurement
+  long mil = millis();
+  if (mil - lastMeasurementMillis > prefs->storage.secondsToStoreMeasurements * 1000) {
+    addMeasurement(mil);
+  }
+}
+
+void EnvLogic::addMeasurement(long mil) {
+  lastMeasurementMillis = mil;
+  int totalSize = sizeof(Measurement) * measurements.size() + 1;
+  if (totalSize >= totalMeasurementMemoryLimit) {
+    measurements.erase(measurements.begin());
+  }
+  measurements.push_back(Measurement(mil, lastHum, lastTemp));
 }
 
 void EnvLogic::setMaxAllowedHum(int hum) {

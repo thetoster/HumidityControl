@@ -29,52 +29,19 @@
  OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
- Prefs.cpp
- Created on: Dec 27, 2017
+ Measurement.h
+ Created on: Dec 29, 2017
  Author: Bartłomiej Żarnowski (Toster)
  */
-#include <Prefs.h>
-#include <EEPROM.h>
+#ifndef Measurement_hpp
+#define Measurement_hpp
 
-Prefs::Prefs() {
-  EEPROM.begin(512);
-  EEPROM.get(0, storage);
-  EEPROM.end();
-  if (storage.crc != calcCRC()) {
-    defaultValues();
-  }
-}
+class Measurement {
+  public:
+    int32_t timestamp;
+    int8_t humidity;
+    int8_t temp;
+    Measurement(int32_t timestamp, int8_t humidity, int8_t temp);
+};
 
-void Prefs::defaultValues() {
-  storage.humidityTrigger = 60;
-  storage.secondsToStoreMeasurements = 60;
-  memset(&storage.ssid[0], 0, sizeof(storage.ssid));
-  memset(&storage.password[0], 0, sizeof(storage.password));
-}
-
-void Prefs::save() {
-  storage.crc = calcCRC();
-  EEPROM.begin(512);
-  EEPROM.put(0, storage);
-  EEPROM.commit();
-  EEPROM.end();
-}
-
-uint8_t Prefs::calcCRC() {
-  const uint8_t* data = &storage;
-  data++; //skip crc field
-  int len = sizeof(storage) - 1;
-  uint8_t crc = 0x00;
-  while (len--) {
-    byte extract = *data++;
-    for (byte tempI = 8; tempI; tempI--) {
-      byte sum = (crc ^ extract) & 0x01;
-      crc >>= 1;
-      if (sum) {
-        crc ^= 0x8C;
-      }
-      extract >>= 1;
-    }
-  }
-  return crc;
-}
+#endif /* Measurement_hpp */
