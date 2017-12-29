@@ -50,6 +50,8 @@ void Prefs::defaultValues() {
   storage.secondsToStoreMeasurements = 60;
   memset(&storage.ssid[0], 0, sizeof(storage.ssid));
   memset(&storage.password[0], 0, sizeof(storage.password));
+  memset(&storage.inNetworkName[0], 0, sizeof(storage.inNetworkName));
+  strcpy(&storage.inNetworkName[0], "HumSensor");
 }
 
 void Prefs::save() {

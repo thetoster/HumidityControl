@@ -41,6 +41,7 @@ struct SavedPrefs {
     uint8_t crc;
     char ssid[60];
     char password[60];
+    char inNetworkName[20];
     int8_t humidityTrigger;
     int8_t secondsToStoreMeasurements;
 };

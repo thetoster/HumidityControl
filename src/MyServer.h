@@ -50,6 +50,8 @@ class MyServer {
     bool needsConfig;
 
     void generateRandomPassword();
+    void enableSoftAP();
+    void connectToAccessPoint();
 };
 
 #endif /* WifiServer_hpp */

@@ -35,15 +35,39 @@
  */
 #include <ESP8266TrueRandom.h>
 #include <MyServer.h>
+#include <ESP8266WiFi.h>
+#include <ESP8266mDNS.h>
+#include <ESP8266WebServer.h>
 
+ESP8266WebServer httpServer(80);
+
+void handleNotFound(){
+  httpServer.send(404, "text/plain", "404: Not found");
+}
+void handleRoot() {
+
+}
 MyServer::MyServer(Prefs* prefs) : prefs(prefs) {
   if (prefs->storage.password[0] == 0) {
     generateRandomPassword();
+    enableSoftAP();
 
   } else {
     needsConfig = false;
+    connectToAccessPoint();
   }
+  httpServer.on("/", handleRoot);
+  httpServer.on("/config", handleRoot);
+  httpServer.on("/status", handleRoot);
+  httpServer.on("/history", handleRoot);
+  httpServer.onNotFound(handleNotFound);
 
+  httpServer.begin();
+}
+
+void MyServer::connectToAccessPoint() {
+  WiFi.begin(prefs->storage.ssid, prefs->storage.password);
+  MDNS.begin(prefs->storage.inNetworkName);
 }
 
 void MyServer::generateRandomPassword() {
@@ -63,7 +87,7 @@ void MyServer::generateRandomPassword() {
 }
 
 String MyServer::getServerIp() {
-  return "192.168.0.4"; //todo: Not sure if always :P
+  return needsConfig ? WiFi.softAPIP().toString() : WiFi.localIP().toString();
 }
 
 bool MyServer::isServerConfigured() {
@@ -72,4 +96,8 @@ bool MyServer::isServerConfigured() {
 
 String MyServer::getPassword() {
   return String(prefs->storage.password);
+}
+
+void MyServer::enableSoftAP() {
+  WiFi.softAP("Hum-Sensor", prefs->storage.password);
 }
