@@ -36,6 +36,8 @@
 #ifndef Measurement_hpp
 #define Measurement_hpp
 
+#include <Arduino.h>
+
 class Measurement {
   public:
     int32_t timestamp;

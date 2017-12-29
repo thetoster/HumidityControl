@@ -29,30 +29,27 @@
  OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
- Prefs.h
- Created on: Dec 27, 2017
+ WifiServer.h
+ Created on: Dec 29, 2017
  Author: Bartłomiej Żarnowski (Toster)
  */
-#ifndef Prefs_hpp
-#define Prefs_hpp
-#include <Arduino.h>
+#ifndef WifiServer_hpp
+#define WifiServer_hpp
 
-struct SavedPrefs {
-    uint8_t crc;
-    char ssid[60];
-    char password[60];
-    int8_t humidityTrigger;
-    int8_t secondsToStoreMeasurements;
-};
+#include "Prefs.h"
 
-class Prefs {
+class MyServer {
   public:
-    SavedPrefs storage;
-    Prefs();
-    void save();
+    MyServer(Prefs* prefs);
+    bool isServerConfigured();
+
+    String getServerIp();
+    String getPassword();
   private:
-    uint8_t calcCRC();
-    void defaultValues();
+    Prefs* prefs;
+    bool needsConfig;
+
+    void generateRandomPassword();
 };
 
-#endif /* Prefs_hpp */
+#endif /* WifiServer_hpp */

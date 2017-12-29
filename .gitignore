@@ -1,2 +1,4 @@
 ﻿.piolibdeps/**
 .pioenvs/**
+.pioenvs
+.piolibdeps

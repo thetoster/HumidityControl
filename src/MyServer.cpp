@@ -29,30 +29,47 @@
  OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
- Prefs.h
- Created on: Dec 27, 2017
+ WifiServer.cpp
+ Created on: Dec 29, 2017
  Author: Bartłomiej Żarnowski (Toster)
  */
-#ifndef Prefs_hpp
-#define Prefs_hpp
-#include <Arduino.h>
+#include <ESP8266TrueRandom.h>
+#include <MyServer.h>
 
-struct SavedPrefs {
-    uint8_t crc;
-    char ssid[60];
-    char password[60];
-    int8_t humidityTrigger;
-    int8_t secondsToStoreMeasurements;
-};
+MyServer::MyServer(Prefs* prefs) : prefs(prefs) {
+  if (prefs->storage.password[0] == 0) {
+    generateRandomPassword();
 
-class Prefs {
-  public:
-    SavedPrefs storage;
-    Prefs();
-    void save();
-  private:
-    uint8_t calcCRC();
-    void defaultValues();
-};
+  } else {
+    needsConfig = false;
+  }
 
-#endif /* Prefs_hpp */
+}
+
+void MyServer::generateRandomPassword() {
+  needsConfig = true;
+  for(int t = 0; t < 8; t++) {
+    int r = ESP8266TrueRandom.random(10);
+    if (r < 3) {
+      prefs->storage.password[t] = ESP8266TrueRandom.random('Z'-'A') + 'A';
+
+    } else if (r < 6) {
+      prefs->storage.password[t] = ESP8266TrueRandom.random('9'-'0') + '0';
+
+    } else {
+      prefs->storage.password[t] = ESP8266TrueRandom.random('z'-'a') + 'a';
+    }
+  }
+}
+
+String MyServer::getServerIp() {
+  return "192.168.0.4"; //todo: Not sure if always :P
+}
+
+bool MyServer::isServerConfigured() {
+  return needsConfig;
+}
+
+String MyServer::getPassword() {
+  return String(prefs->storage.password);
+}

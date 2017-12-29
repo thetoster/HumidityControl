@@ -61,7 +61,7 @@ void Prefs::save() {
 }
 
 uint8_t Prefs::calcCRC() {
-  const uint8_t* data = &storage;
+  const uint8_t* data = (uint8_t*)&storage;
   data++; //skip crc field
   int len = sizeof(storage) - 1;
   uint8_t crc = 0x00;
