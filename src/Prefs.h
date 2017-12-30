@@ -43,7 +43,7 @@ struct SavedPrefs {
     char password[60];
     char inNetworkName[20];
     int8_t humidityTrigger;
-    int8_t secondsToStoreMeasurements;
+    uint8_t secondsToStoreMeasurements;
 };
 
 class Prefs {
@@ -51,9 +51,9 @@ class Prefs {
     SavedPrefs storage;
     Prefs();
     void save();
+    void defaultValues();
   private:
     uint8_t calcCRC();
-    void defaultValues();
 };
 
 extern Prefs prefs;

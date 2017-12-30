@@ -43,6 +43,9 @@ class MyServer {
 
     String getServerIp();
     String getPassword();
+    void restart();
+    void switchToConfigMode();
+    void update();
   private:
     bool needsConfig;
 

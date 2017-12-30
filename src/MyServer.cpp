@@ -45,11 +45,37 @@
 ESP8266WebServer httpServer(80);
 MyServer myServer;
 
+static const int CONNECTION_TIMEOUT = 15 * 1000;
+
+static bool checkAuth() {
+  if (false) {  //todo: do something here, maybe random? :)
+    httpServer.send(401, "text/plain", "401: Unauthenticated");
+    return false;
+  };
+  return true;
+}
+
 static void handleNotFound(){
+  if (checkAuth() == false) {
+    return;
+  }
   httpServer.send(404, "text/plain", "404: Not found");
 }
 
+static void handleFactoryConfig() {
+  if (checkAuth() == false) {
+    return;
+  }
+  prefs.defaultValues();
+  prefs.save();
+  httpServer.send(200, "text/plain", "200: OK");
+  myServer.switchToConfigMode();
+}
+
 static void handleGetConfig() {
+  if (checkAuth() == false) {
+    return;
+  }
   DynamicJsonBuffer  jsonBuffer;
   JsonObject& root = jsonBuffer.createObject();
   root["ssid"] = prefs.storage.ssid;
@@ -61,11 +87,105 @@ static void handleGetConfig() {
   httpServer.send(200, "application/json", response);
 }
 
-static void handleSetConfig() {
+static String getStringArg(String argName, int maxLen, bool* isError) {
+  String result = "";
+  *isError = false;
+  if (httpServer.hasArg(argName)) {
+    result = httpServer.arg(argName);
+    if (result.length() >= maxLen) {
+      String resp = "406: Not Acceptable, '" + argName + "' to long.";
+      httpServer.send(406, "text/plain", resp);
+      *isError = true;
+    }
+  }
+  return result;
+}
 
+static int getIntArg(String argName, int maxValue, bool* isError) {
+  int result = -1;
+  *isError = false;
+  if (httpServer.hasArg(argName)) {
+    result = httpServer.arg(argName).toInt();
+    if (result >= maxValue) {
+      String resp = "406: Not Acceptable, '" + argName + "' to big.";
+      httpServer.send(406, "text/plain", resp);
+      *isError = true;
+    }
+  }
+  return result;
+}
+
+static void handleSetConfig() {
+  if (checkAuth() == false) {
+    return;
+  }
+  bool fail;
+  String ssid = getStringArg("ssid", sizeof(prefs.storage.ssid), &fail);
+  if (fail == true) {
+    return;
+  }
+
+  String pass = getStringArg("password", sizeof(prefs.storage.password), &fail);
+  if (fail == true) {
+    return;
+  }
+
+  String name = getStringArg("inNetName", sizeof(prefs.storage.inNetworkName), &fail);
+  if (fail == true) {
+    return;
+  }
+
+  int humTrig = getIntArg("humTrigger", 100, &fail);
+  if (fail == true) {
+    return;
+  }
+
+  int histInt = getIntArg("addHistoryInterval", 255, &fail);
+  if (fail == true) {
+    return;
+  }
+
+  //now apply new values
+  bool changed = false;
+  bool restartNetwork = false;
+  if (humTrig > 0) {
+    prefs.storage.humidityTrigger = humTrig;
+    changed = true;
+  }
+  if (histInt > 0) {
+    prefs.storage.secondsToStoreMeasurements = histInt;
+    changed = true;
+  }
+  if (name.length() > 0) {
+    strncpy(prefs.storage.inNetworkName, name.c_str(), sizeof(prefs.storage.inNetworkName));
+    changed = true;
+    restartNetwork = true;
+  }
+  if (pass.length() > 0) {
+    strncpy(prefs.storage.password, pass.c_str(), sizeof(prefs.storage.password));
+    changed = true;
+    restartNetwork = true;
+  }
+  if (ssid.length() > 0) {
+    strncpy(prefs.storage.ssid, ssid.c_str(), sizeof(prefs.storage.ssid));
+    changed = true;
+    restartNetwork = true;
+  }
+  if (changed) {
+    prefs.save();
+    httpServer.send(200, "text/plain", "200: SAVED");
+  }
+  //httpServer.send(200, "text/plain", "200: OK");
+  delay(200);
+  if (restartNetwork) {
+    myServer.restart();
+  }
 }
 
 static void handleHistory() {
+  if (checkAuth() == false) {
+    return;
+  }
   DynamicJsonBuffer  jsonBuffer;
   JsonObject& root = jsonBuffer.createObject();
   JsonArray& items = root.createNestedArray("items");
@@ -83,6 +203,9 @@ static void handleHistory() {
 }
 
 static void handleStatus() {
+  if (checkAuth() == false) {
+    return;
+  }
   DynamicJsonBuffer  jsonBuffer;
   JsonObject& root = jsonBuffer.createObject();
   root["H"] = envLogic.lastHum;
@@ -94,16 +217,16 @@ static void handleStatus() {
 }
 
 MyServer::MyServer() {
-  if (prefs.storage.password[0] == 0) {
+  if (prefs.storage.ssid[0] == 0) {
     generateRandomPassword();
     enableSoftAP();
-
   } else {
     needsConfig = false;
     connectToAccessPoint();
   }
   httpServer.on("/", handleNotFound);
   httpServer.on("/config", HTTP_GET, handleGetConfig);
+  httpServer.on("/factoryReset", handleFactoryConfig);
   httpServer.on("/config", HTTP_POST, handleSetConfig);
   httpServer.on("/status", handleStatus);
   httpServer.on("/history", handleHistory);
@@ -112,24 +235,49 @@ MyServer::MyServer() {
   httpServer.begin();
 }
 
+void MyServer::switchToConfigMode() {
+  WiFi.setAutoReconnect(false);
+  WiFi.disconnect(false);
+  WiFi.waitForConnectResult();
+  generateRandomPassword();
+  needsConfig = true;
+  enableSoftAP();
+}
+
 void MyServer::connectToAccessPoint() {
+  WiFi.softAPdisconnect(false);
   WiFi.begin(prefs.storage.ssid, prefs.storage.password);
+  WiFi.setAutoReconnect(true);
+  long time = millis();
+  while(WiFi.isConnected() == false) {
+    delay(500);
+    if (millis() - time > CONNECTION_TIMEOUT) {
+      break;
+    }
+  }
+  if (WiFi.isConnected() == false) {
+    switchToConfigMode();
+  }
   MDNS.begin(prefs.storage.inNetworkName);
 }
 
 void MyServer::generateRandomPassword() {
   needsConfig = true;
   for(int t = 0; t < 8; t++) {
-    int r = ESP8266TrueRandom.random(10);
-    if (r < 3) {
-      prefs.storage.password[t] = ESP8266TrueRandom.random('Z'-'A') + 'A';
+    strcpy(prefs.storage.password, "TestTest");
+    //prefs.storage.password[t] = random('Z'-'A') + 'A';
 
-    } else if (r < 6) {
-      prefs.storage.password[t] = ESP8266TrueRandom.random('9'-'0') + '0';
-
-    } else {
-      prefs.storage.password[t] = ESP8266TrueRandom.random('z'-'a') + 'a';
-    }
+    //hmmm.. it's crash, how sad :(
+//    int r = ESP8266TrueRandom.random(10);
+//    if (r < 3) {
+//      prefs.storage.password[t] = ESP8266TrueRandom.random('Z'-'A') + 'A';
+//
+//    } else if (r < 6) {
+//      prefs.storage.password[t] = ESP8266TrueRandom.random('9'-'0') + '0';
+//
+//    } else {
+//      prefs.storage.password[t] = ESP8266TrueRandom.random('z'-'a') + 'a';
+//    }
   }
 }
 
@@ -138,7 +286,7 @@ String MyServer::getServerIp() {
 }
 
 bool MyServer::isServerConfigured() {
-  return needsConfig;
+  return needsConfig == false;
 }
 
 String MyServer::getPassword() {
@@ -147,4 +295,24 @@ String MyServer::getPassword() {
 
 void MyServer::enableSoftAP() {
   WiFi.softAP(prefs.storage.inNetworkName, prefs.storage.password);
+}
+
+void MyServer::restart() {
+  WiFi.softAPdisconnect(false);
+  WiFi.setAutoReconnect(false);
+  WiFi.disconnect(false);
+  WiFi.waitForConnectResult();
+  delay(1000);
+  if (prefs.storage.ssid[0] == 0) {
+    generateRandomPassword();
+    enableSoftAP();
+  } else {
+    needsConfig = false;
+    connectToAccessPoint();
+  }
+}
+
+void MyServer::update() {
+  MDNS.update();
+  httpServer.handleClient();
 }

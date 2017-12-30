@@ -49,6 +49,7 @@ int EnvLogic::getMaxAllowedHum() {
 }
 
 void EnvLogic::update() {
+  //TODO: add some test to not mesure too often 1-2s delay
   bool wasFanOn = isFanEnabled();
 
   lastTemp = sht.getTemperature();

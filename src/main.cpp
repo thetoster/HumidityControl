@@ -1,3 +1,4 @@
+#define DEBUG_WIFI 1
 #include <Arduino.h>
 #include <SPI.h>
 #include <Wire.h>
@@ -16,11 +17,11 @@ void setup() {
   display.setColor(WHITE);
   display.setTextAlignment(TEXT_ALIGN_LEFT);
   display.flipScreenVertically();
-  Serial.begin(115200);
 }
 
 void normalMode() {
   envLogic.update();
+  myServer.update();
   display.clear();
   display.setColor(WHITE);
   display.setTextAlignment(TEXT_ALIGN_LEFT);
@@ -32,7 +33,7 @@ void normalMode() {
   display.drawString(0, 16, envLogic.getDisplayHum());
   display.drawString(0, 37, envLogic.getDisplayTemp());
   display.display();
-  delay(2000);
+  delay(200);
 }
 
 void configMode() {
@@ -40,14 +41,12 @@ void configMode() {
   display.setColor(WHITE);
   display.setTextAlignment(TEXT_ALIGN_LEFT);
   display.setFont(ArialMT_Plain_16);
-  if (envLogic.isFanEnabled()) {
-    display.drawString(0, 0, "Konfiguracja");
-  }
-  display.setFont(ArialMT_Plain_24);
+  display.drawString(0, 0, "Konfiguracja");
   display.drawString(0, 16, myServer.getServerIp());
   display.drawString(0, 37, myServer.getPassword());
   display.display();
-  delay(2000);
+  myServer.update();
+  delay(200);
 }
 
 void loop() {
