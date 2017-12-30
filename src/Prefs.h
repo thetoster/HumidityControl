@@ -56,4 +56,5 @@ class Prefs {
     void defaultValues();
 };
 
+extern Prefs prefs;
 #endif /* Prefs_hpp */

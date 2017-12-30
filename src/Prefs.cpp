@@ -36,6 +36,8 @@
 #include <Prefs.h>
 #include <EEPROM.h>
 
+Prefs prefs;
+
 Prefs::Prefs() {
   EEPROM.begin(512);
   EEPROM.get(0, storage);

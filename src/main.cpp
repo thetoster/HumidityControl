@@ -6,10 +6,7 @@
 #include "EnvLogic.h"
 #include "MyServer.h"
 
-Prefs prefs;
 SSD1306  display(0x3c, 5, 4);
-EnvLogic envLogic(&prefs);
-MyServer myServer(&prefs);
 
 void setup() {
   display.init();

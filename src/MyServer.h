@@ -36,22 +36,21 @@
 #ifndef WifiServer_hpp
 #define WifiServer_hpp
 
-#include "Prefs.h"
-
 class MyServer {
   public:
-    MyServer(Prefs* prefs);
+    MyServer();
     bool isServerConfigured();
 
     String getServerIp();
     String getPassword();
   private:
-    Prefs* prefs;
     bool needsConfig;
 
     void generateRandomPassword();
     void enableSoftAP();
     void connectToAccessPoint();
 };
+
+extern MyServer myServer;
 
 #endif /* WifiServer_hpp */

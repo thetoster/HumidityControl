@@ -38,32 +38,29 @@
 
 #include <SHT21.h>
 #include <vector>
-#include "Prefs.h"
 #include "Measurement.h"
 
 class EnvLogic {
   public:
+    int lastTemp;
+    int lastHum;
     std::vector<Measurement> measurements;
 
-    EnvLogic(Prefs* prefs);
+    EnvLogic();
     void update();
-    void setMaxAllowedHum(int hum);
-    int getMaxAllowedHum();
     String getDisplayTemp();
     String getDisplayHum();
     String getDisplayFan();
     bool isFanEnabled();
-    void reloadPrefs();
   private:
-    Prefs* prefs;
     SHT21 sht;
-    int lastTemp;
-    int lastHum;
-    int maxAllowedHum;
     long turnOnFanMillis;
     long lastMeasurementMillis;
 
+    int getMaxAllowedHum();
     void addMeasurement(long mil);
 };
+
+extern EnvLogic envLogic;
 
 #endif /* EnvLogic_hpp */
