@@ -41,7 +41,7 @@ EnvLogic envLogic;
 
 EnvLogic::EnvLogic() :
   requestedRunToMillis(0), lastTemp(0), lastHum(0),
-  turnOnFanMillis(0), lastMeasurementMillis(0) {
+  turnOnFanMillis(0), lastMeasurementMillis(0), lastUpdate(0) {
 }
 
 void EnvLogic::requestRunFor(int seconds) {
@@ -53,11 +53,13 @@ int EnvLogic::getMaxAllowedHum() {
 }
 
 void EnvLogic::update() {
-  //TODO: add some test to not mesure too often 1-2s delay
   bool wasFanOn = isFanEnabled();
 
-  lastTemp = sht.getTemperature();
-  lastHum = sht.getHumidity();
+  if (millis() - lastUpdate > 1000) {
+    lastTemp = sht.getTemperature();
+    lastHum = sht.getHumidity();
+    lastUpdate = millis();
+  }
 
   if (wasFanOn == false && isFanEnabled()) {
     turnOnFanMillis = millis();

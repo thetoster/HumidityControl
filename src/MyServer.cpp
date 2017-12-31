@@ -322,7 +322,7 @@ void MyServer::restart() {
   httpServer.on("/config", HTTP_POST, handleSetConfig);
   httpServer.on("/status", handleStatus);
   httpServer.on("/history", handleHistory);
-  httpServer.on("/run", handleRun);
+  httpServer.on("/run", HTTP_POST, handleRun);
   httpServer.on("/clearHistory", handleClearHistory);
   httpServer.onNotFound(handleNotFound);
 

@@ -58,6 +58,7 @@ class EnvLogic {
     long requestedRunToMillis;
     long turnOnFanMillis;
     long lastMeasurementMillis;
+    long lastUpdate;
 
     int getMaxAllowedHum();
     void addMeasurement(long mil);
