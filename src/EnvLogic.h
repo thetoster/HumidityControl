@@ -52,8 +52,10 @@ class EnvLogic {
     String getDisplayHum();
     String getDisplayFan();
     bool isFanEnabled();
+    void requestRunFor(int seconds);
   private:
     SHT21 sht;
+    long requestedRunToMillis;
     long turnOnFanMillis;
     long lastMeasurementMillis;
 

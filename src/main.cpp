@@ -1,4 +1,3 @@
-#define DEBUG_WIFI 1
 #include <Arduino.h>
 #include <SPI.h>
 #include <Wire.h>
@@ -28,6 +27,9 @@ void normalMode() {
   display.setFont(ArialMT_Plain_16);
   if (envLogic.isFanEnabled()) {
     display.drawString(0, 0, envLogic.getDisplayFan());
+  } else {
+    //show network state
+    display.drawString(0, 0, myServer.getStatus());
   }
   display.setFont(ArialMT_Plain_24);
   display.drawString(0, 16, envLogic.getDisplayHum());

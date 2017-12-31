@@ -43,6 +43,7 @@ class MyServer {
 
     String getServerIp();
     String getPassword();
+    String getStatus();
     void restart();
     void switchToConfigMode();
     void update();

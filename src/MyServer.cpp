@@ -62,6 +62,11 @@ static void handleNotFound(){
   httpServer.send(404, "text/plain", "404: Not found");
 }
 
+static void handleClearHistory() {
+  envLogic.measurements.clear();
+  httpServer.send(200, "text/plain", "200: OK");
+}
+
 static void handleFactoryConfig() {
   if (checkAuth() == false) {
     return;
@@ -171,14 +176,30 @@ static void handleSetConfig() {
     changed = true;
     restartNetwork = true;
   }
+  String result = "200: OK";
   if (changed) {
     prefs.save();
-    httpServer.send(200, "text/plain", "200: SAVED");
+    result += ", Config Saved";
   }
   //httpServer.send(200, "text/plain", "200: OK");
   delay(200);
   if (restartNetwork) {
+    result += ", Network restarted";
+  }
+  httpServer.send(200, "text/plain", result);
+  if (restartNetwork) {
     myServer.restart();
+  }
+}
+
+static void handleRun() {
+  bool fail = false;
+  int sec = getIntArg("time", 40 * 60, &fail);
+  if (fail == false && sec > 0) {
+      envLogic.requestRunFor(sec);
+      httpServer.send(200, "text/plain", "200: OK");
+  } else {
+    httpServer.send(400, "text/plain", "400: BAD REQUEST");
   }
 }
 
@@ -217,28 +238,13 @@ static void handleStatus() {
 }
 
 MyServer::MyServer() {
-  if (prefs.storage.ssid[0] == 0) {
-    generateRandomPassword();
-    enableSoftAP();
-  } else {
-    needsConfig = false;
-    connectToAccessPoint();
-  }
-  httpServer.on("/", handleNotFound);
-  httpServer.on("/config", HTTP_GET, handleGetConfig);
-  httpServer.on("/factoryReset", handleFactoryConfig);
-  httpServer.on("/config", HTTP_POST, handleSetConfig);
-  httpServer.on("/status", handleStatus);
-  httpServer.on("/history", handleHistory);
-  httpServer.onNotFound(handleNotFound);
-
-  httpServer.begin();
+  restart();
 }
 
 void MyServer::switchToConfigMode() {
   WiFi.setAutoReconnect(false);
   WiFi.disconnect(false);
-  WiFi.waitForConnectResult();
+  delay(500);
   generateRandomPassword();
   needsConfig = true;
   enableSoftAP();
@@ -249,20 +255,19 @@ void MyServer::connectToAccessPoint() {
   WiFi.begin(prefs.storage.ssid, prefs.storage.password);
   WiFi.setAutoReconnect(true);
   long time = millis();
-  while(WiFi.isConnected() == false) {
-    delay(500);
-    if (millis() - time > CONNECTION_TIMEOUT) {
-      break;
-    }
-  }
-  if (WiFi.isConnected() == false) {
-    switchToConfigMode();
-  }
-  MDNS.begin(prefs.storage.inNetworkName);
+//  while(WiFi.isConnected() == false) {
+//    delay(500);
+//    if (millis() - time > CONNECTION_TIMEOUT) {
+//      break;
+//    }
+//  }
+//  if (WiFi.isConnected() == false) {
+//    switchToConfigMode();
+//  }
 }
 
 void MyServer::generateRandomPassword() {
-  needsConfig = true;
+  memset(prefs.storage.password, 0, sizeof(prefs.storage.password));
   for(int t = 0; t < 8; t++) {
     strcpy(prefs.storage.password, "TestTest");
     //prefs.storage.password[t] = random('Z'-'A') + 'A';
@@ -290,7 +295,7 @@ bool MyServer::isServerConfigured() {
 }
 
 String MyServer::getPassword() {
-  return String(prefs.storage.password);
+  return prefs.storage.password[0] == 0 ? "<-->" : String(prefs.storage.password);
 }
 
 void MyServer::enableSoftAP() {
@@ -298,17 +303,52 @@ void MyServer::enableSoftAP() {
 }
 
 void MyServer::restart() {
+  httpServer.stop();
   WiFi.softAPdisconnect(false);
   WiFi.setAutoReconnect(false);
   WiFi.disconnect(false);
-  WiFi.waitForConnectResult();
-  delay(1000);
-  if (prefs.storage.ssid[0] == 0) {
+
+  needsConfig = prefs.storage.ssid[0] == 0;
+  if (needsConfig) {
     generateRandomPassword();
     enableSoftAP();
+
   } else {
-    needsConfig = false;
     connectToAccessPoint();
+  }
+  httpServer.on("/", handleNotFound);
+  httpServer.on("/config", HTTP_GET, handleGetConfig);
+  httpServer.on("/factoryReset", handleFactoryConfig);
+  httpServer.on("/config", HTTP_POST, handleSetConfig);
+  httpServer.on("/status", handleStatus);
+  httpServer.on("/history", handleHistory);
+  httpServer.on("/run", handleRun);
+  httpServer.on("/clearHistory", handleClearHistory);
+  httpServer.onNotFound(handleNotFound);
+
+  httpServer.begin();
+  MDNS.begin(prefs.storage.inNetworkName);
+  MDNS.addService("http", "tcp", 80);
+}
+
+String MyServer::getStatus() {
+  switch(WiFi.status()) {
+    case WL_CONNECTED:
+      return "";
+    case WL_DISCONNECTED:
+      return "Odlaczony";
+    case WL_IDLE_STATUS:
+      return "Bezczynny";
+    case WL_NO_SSID_AVAIL:
+      return "Brak SSID";
+    case WL_SCAN_COMPLETED:
+      return "Zeskanowane";
+    case WL_CONNECT_FAILED:
+      return "Blad polaczenia";
+    case WL_CONNECTION_LOST:
+      return "Utracono pol.";
+    default:
+      return "?";
   }
 }
 
