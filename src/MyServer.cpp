@@ -45,11 +45,12 @@
 ESP8266WebServer httpServer(80);
 MyServer myServer;
 
-static const int CONNECTION_TIMEOUT = 15 * 1000;
+static const char* www_username = "Lampster";
+static const char* www_realm = "Authentication Failed, use login name:Lampster";
 
 static bool checkAuth() {
-  if (false) {  //todo: do something here, maybe random? :)
-    httpServer.send(401, "text/plain", "401: Unauthenticated");
+  if (httpServer.authenticate(www_username, prefs.storage.password) == false) {
+    httpServer.requestAuthentication(DIGEST_AUTH, www_realm);
     return false;
   };
   return true;
@@ -269,20 +270,20 @@ void MyServer::connectToAccessPoint() {
 void MyServer::generateRandomPassword() {
   memset(prefs.storage.password, 0, sizeof(prefs.storage.password));
   for(int t = 0; t < 8; t++) {
-    strcpy(prefs.storage.password, "TestTest");
+//    strcpy(prefs.storage.password, "TestTest");
     //prefs.storage.password[t] = random('Z'-'A') + 'A';
 
     //hmmm.. it's crash, how sad :(
-//    int r = ESP8266TrueRandom.random(10);
-//    if (r < 3) {
-//      prefs.storage.password[t] = ESP8266TrueRandom.random('Z'-'A') + 'A';
-//
-//    } else if (r < 6) {
-//      prefs.storage.password[t] = ESP8266TrueRandom.random('9'-'0') + '0';
-//
-//    } else {
-//      prefs.storage.password[t] = ESP8266TrueRandom.random('z'-'a') + 'a';
-//    }
+    int r = ESP8266TrueRandom.random(10);
+    if (r < 3) {
+      prefs.storage.password[t] = ESP8266TrueRandom.random('Z'-'A') + 'A';
+
+    } else if (r < 6) {
+      prefs.storage.password[t] = ESP8266TrueRandom.random('9'-'0') + '0';
+
+    } else {
+      prefs.storage.password[t] = ESP8266TrueRandom.random('z'-'a') + 'a';
+    }
   }
 }
 
