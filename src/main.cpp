@@ -2,9 +2,10 @@
 #include <SPI.h>
 #include <Wire.h>
 #include <stdlib.h>
-#include "SSD1306.h" // alias for `#include "SSD1306Wire.h"`
+#include <SSD1306.h> // alias for `#include "SSD1306Wire.h"`
 #include "EnvLogic.h"
 #include "MyServer.h"
+#include "Updater.h"
 
 SSD1306  display(0x3c, 5, 4);
 
@@ -52,6 +53,12 @@ void configMode() {
 }
 
 void loop() {
+  //updater has it's own display management
+  if (updater.update()) {
+    return;
+  }
+
+  //no update in progress
   if (myServer.isServerConfigured()) {
     normalMode();
 

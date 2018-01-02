@@ -41,6 +41,7 @@
 #include <ArduinoJson.h>
 #include "EnvLogic.h"
 #include "Prefs.h"
+#include "Updater.h"
 
 ESP8266WebServer httpServer(80);
 MyServer myServer;
@@ -64,6 +65,9 @@ static void handleNotFound(){
 }
 
 static void handleClearHistory() {
+  if (checkAuth() == false) {
+    return;
+  }
   envLogic.measurements.clear();
   httpServer.send(200, "text/plain", "200: OK");
 }
@@ -194,11 +198,29 @@ static void handleSetConfig() {
 }
 
 static void handleRun() {
+  if (checkAuth() == false) {
+    return;
+  }
   bool fail = false;
   int sec = getIntArg("time", 40 * 60, &fail);
   if (fail == false && sec > 0) {
       envLogic.requestRunFor(sec);
       httpServer.send(200, "text/plain", "200: OK");
+  } else {
+    httpServer.send(400, "text/plain", "400: BAD REQUEST");
+  }
+}
+
+static void handleUpdate() {
+  if (checkAuth() == false) {
+    return;
+  }
+  bool fail = false;
+  String url = getStringArg("url", 1024, &fail);
+  if (fail == false && url.length() > 0) {
+      httpServer.send(200, "text/plain", "200: OK");
+      updater.execute(url);
+
   } else {
     httpServer.send(400, "text/plain", "400: BAD REQUEST");
   }
@@ -325,6 +347,7 @@ void MyServer::restart() {
   httpServer.on("/history", handleHistory);
   httpServer.on("/run", HTTP_POST, handleRun);
   httpServer.on("/clearHistory", handleClearHistory);
+  httpServer.on("/update", HTTP_POST, handleUpdate);
   httpServer.onNotFound(handleNotFound);
 
   httpServer.begin();
