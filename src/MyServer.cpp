@@ -267,7 +267,10 @@ MyServer::MyServer() {
 void MyServer::switchToConfigMode() {
   WiFi.setAutoReconnect(false);
   WiFi.disconnect(false);
+  WiFi.enableAP(false);
+  WiFi.enableSTA(false);
   delay(500);
+  memset(prefs.storage.ssid, 0, sizeof(prefs.storage.ssid));
   generateRandomPassword();
   needsConfig = true;
   enableSoftAP();
@@ -278,24 +281,11 @@ void MyServer::connectToAccessPoint() {
   WiFi.begin(prefs.storage.ssid, prefs.storage.password);
   WiFi.setAutoReconnect(true);
   long time = millis();
-//  while(WiFi.isConnected() == false) {
-//    delay(500);
-//    if (millis() - time > CONNECTION_TIMEOUT) {
-//      break;
-//    }
-//  }
-//  if (WiFi.isConnected() == false) {
-//    switchToConfigMode();
-//  }
 }
 
 void MyServer::generateRandomPassword() {
   memset(prefs.storage.password, 0, sizeof(prefs.storage.password));
   for(int t = 0; t < 8; t++) {
-//    strcpy(prefs.storage.password, "TestTest");
-    //prefs.storage.password[t] = random('Z'-'A') + 'A';
-
-    //hmmm.. it's crash, how sad :(
     int r = ESP8266TrueRandom.random(10);
     if (r < 3) {
       prefs.storage.password[t] = ESP8266TrueRandom.random('Z'-'A') + 'A';
@@ -330,6 +320,8 @@ void MyServer::restart() {
   WiFi.softAPdisconnect(false);
   WiFi.setAutoReconnect(false);
   WiFi.disconnect(false);
+  WiFi.enableAP(false);
+  WiFi.enableSTA(false);
 
   needsConfig = prefs.storage.ssid[0] == 0;
   if (needsConfig) {

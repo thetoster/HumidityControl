@@ -24,22 +24,17 @@
 
 #define SHT21_ADDRESS 0x40  //I2C address for the sensor
 
-#define TRIGGER_TEMP_MEASURE_NOHOLD  0xF3
-#define TRIGGER_HUMD_MEASURE_NOHOLD  0xF5
-
 class SHT21 {
 
 public:
-  SHT21();
-
   void begin();
   float getHumidity(void);
   float getTemperature(void);
 
 private:
-
   uint16_t readSHT21(uint8_t command);
-
+  uint8_t read8(uint8_t command);
+  void write8(uint8_t reg, uint8_t value);
 };
 
 #endif
