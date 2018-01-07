@@ -43,9 +43,12 @@
 #include "Prefs.h"
 #include "Updater.h"
 
+const static String rootHtml =
+    #include "www/index.html"
+;
+
 ESP8266WebServer httpServer(80);
 MyServer myServer;
-
 static const char* www_username = "Lampster";
 static const char* www_realm = "Authentication Failed, use login name:Lampster";
 
@@ -211,6 +214,48 @@ static void handleRun() {
   }
 }
 
+static void getHistoryData(int count, String& labelData, String &tempData, String& humData) {
+  labelData = "";
+  tempData = "";
+  humData = "";
+  auto m = envLogic.measurements.begin();
+  if (count < envLogic.measurements.size()) {
+    m += envLogic.measurements.size() - count;
+  }
+  long mil = millis();
+  for(; m != envLogic.measurements.end(); m++) {
+    labelData.concat("'");
+    labelData.concat( millisToTime(mil - m->timestamp) );
+    labelData.concat("',");
+    tempData.concat( String(m->temp) );
+    tempData.concat(",");
+    humData.concat( String(m->humidity) );
+    humData.concat(",");
+  }
+  labelData.remove(labelData.length() - 1);
+  tempData.remove(labelData.length() - 1);
+  humData.remove(labelData.length() - 1);
+}
+
+static void handleRoot() {
+  if (checkAuth() == false) {
+    return;
+  }
+  bool fail = false;
+  //put config inside
+  String html = rootHtml;
+  html.replace("${ssid}", prefs.storage.ssid);
+  html.replace("${inNetName}", prefs.storage.inNetworkName);
+  html.replace("${humTrigger}", String(prefs.storage.humidityTrigger));
+  html.replace("${addHistoryInterval}", String(prefs.storage.secondsToStoreMeasurements));
+  String labels, temps, hums;
+  getHistoryData(60, labels, temps, hums);
+  html.replace("${dataLabels}", labels);
+  html.replace("${dataTemp}", temps);
+  html.replace("${dataHum}", hums);
+  httpServer.send(200, "text/html", html);
+}
+
 static void handleUpdate() {
   if (checkAuth() == false) {
     return;
@@ -331,7 +376,7 @@ void MyServer::restart() {
   } else {
     connectToAccessPoint();
   }
-  httpServer.on("/", handleNotFound);
+  httpServer.on("/", handleRoot);
   httpServer.on("/config", HTTP_GET, handleGetConfig);
   httpServer.on("/factoryReset", handleFactoryConfig);
   httpServer.on("/config", HTTP_POST, handleSetConfig);

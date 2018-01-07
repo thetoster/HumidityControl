@@ -1,110 +1,163 @@
+R"(
 <!doctype html>
-<html lang="pl">
+<html lang='pl'>
     <head>
-        <meta charset="UTF-8">
-        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-        <meta http-equiv="Content-Language" content="pl"  />
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <meta charset='UTF-8'>
+        <meta http-equiv='Content-Type' content='text/html; charset=utf-8' />
+        <meta http-equiv='Content-Language' content='pl'  />
+        <meta name='viewport' content='width=device-width, initial-scale=1, shrink-to-fit=no'>
  
         <title>Strona główna czujnika</title>
 
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/css/bootstrap.min.css" integrity="sha384-Zug+QiDoJOrZ5t4lssLdxGhVrurbmBWopoEl+M6BdEfwnCJZtKxi1KgxUyJq13dy" crossorigin="anonymous">
+        <link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/css/bootstrap.min.css' integrity='sha384-Zug+QiDoJOrZ5t4lssLdxGhVrurbmBWopoEl+M6BdEfwnCJZtKxi1KgxUyJq13dy' crossorigin='anonymous'>
     </head>
 <body>
-    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/js/bootstrap.min.js" integrity="sha384-a5N7Y/aK3qNeh15eJKGWxsqtnX/wWdSZSKp+81YjTmS15nvnvxKHuzaWwXHDli+4" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js"></script>
+    <script src='https://code.jquery.com/jquery-3.2.1.slim.min.js' integrity='sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN' crossorigin='anonymous'></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js' integrity='sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q' crossorigin='anonymous'></script>
+    <script src='https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/js/bootstrap.min.js' integrity='sha384-a5N7Y/aK3qNeh15eJKGWxsqtnX/wWdSZSKp+81YjTmS15nvnvxKHuzaWwXHDli+4' crossorigin='anonymous'></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js'></script>
     
-    <div class="container-fluid mb-4">
-        <form class="card">
-            <div class="card-header alert alert-primary" role="alert">
+    <div class='container-fluid mb-4'>
+        <form class='card'>
+            <div class='card-header alert alert-primary' role='alert'>
               Odczyty czujnika
             </div>
-            <div class="card-body">
-                <canvas class="btn" id="myChart" height="100"></canvas>
-                <a href="/status"></a>
-                <button type="submit" class="btn btn-primary" formaction="/">Odśwież</button>
-                <button type="submit" class="btn btn-danger" formaction="/clearHistory">Wyczyść historię</button>
+            <div class='card-body'>
+                <canvas class='btn' id='myChart' height='100'></canvas>
+                <a href='/status'></a>
+                <button type='submit' class='btn btn-primary' formaction='/'>Odśwież</button>
+                <button type='submit' class='btn btn-danger' formaction='/clearHistory'>Wyczyść historię</button>
           </div>
         </form>
     </div>
 
-    <div class="container-fluid mb-4">
-        <form class="card" action="/run" method="POST">
-            <div class="card-header alert alert-success" role="alert">
+    <div class='container-fluid mb-4'>
+        <form class='card' action='/run' method='POST'>
+            <div class='card-header alert alert-success' role='alert'>
               Ręczne uruchomienie nawiewu
             </div>
-            <div class="card-body">
-                <div class="form-group">
-                    <label for="time">Czas działania nawiewu</label>
-                    <input type="number" class="form-control" id="time" name="time" aria-describedby="runTimeHelp" placeholder="Podaj czas w sekundach">
-                    <small id="runTimeHelp" class="form-text text-muted">Podana wartość określa ile sekund ma działać nawiew niezależnie od poziomu wilgotności w pomieszczeniu.</small>
+            <div class='card-body'>
+                <div class='form-group'>
+                    <label for='time'>Czas działania nawiewu</label>
+                    <input type='number' class='form-control' id='time' name='time' aria-describedby='runTimeHelp' placeholder='Podaj czas w sekundach'>
+                    <small id='runTimeHelp' class='form-text text-muted'>Podana wartość określa ile sekund ma działać nawiew niezależnie od poziomu wilgotności w pomieszczeniu.</small>
                 </div>
-                <button type="submit" class="btn btn-primary">Uruchom nawiew</button>
+                <button type='submit' class='btn btn-primary'>Uruchom nawiew</button>
             </div>
         </form>
     </div>
 
-    <div class="container-fluid mb-4">
-        <form class="card" method="POST">
-            <div class="card-header alert alert-warning" role="alert">
+    <div class='container-fluid mb-4'>
+        <form class='card' method='POST'>
+            <div class='card-header alert alert-warning' role='alert'>
               Konfiguracja
             </div>
-            <div class="card-body">
-            <button type="submit" class="btn btn-warning" formaction="/config">Zapisz konfiguracje</button>
-            <button type="submit" class="btn btn-danger" formaction="/factoryReset">Zresetuj do ustawień fabrycznych</button>
+            <div class='form-group'>
+                <label for='ssid'>Nazwa punktu dostępowego (SSID)</label>
+                <input type='text' class='form-control' id='ssid' name='ssid' aria-describedby='ssidHelp' placeholder='Podaj nazwę sieci' value='${ssid}'>
+                <small id='ssidHelp' class='form-text text-muted'>Po zapisaniu konfiguracji, czujnik będzie starał się połączyć do tej sieci.</small>
+            </div>
+            <div class='form-group'>
+                <label for='password'>Hasło do punktu dostępowego</label>
+                <input type='password' class='form-control' id='password' name='password' aria-describedby='passwordHelp' placeholder='Podaj hasło do sieci' >
+                <small id='passwordHelp' class='form-text text-muted'>To hasło będzie użyte podczas próby połączenia się do sieci o podanej nazwie (ssid).</small>
+            </div>
+            <div class='form-group'>
+                <label for='inNetName'>Nazwa czujnika</label>
+                <input type='text' class='form-control' id='inNetName' name='inNetName' aria-describedby='inNetNameHelp' placeholder='Nazwa czujnika w sieci' value='${inNetName}'>
+                <small id='inNetNameHelp' class='form-text text-muted'>Pod tą nazwą czujnik będzie się rozgłaszać w sieci za pomocą protokołu mDNS.</small>
+            </div>
+            <div class='form-group'>
+                <label for='humTrigger'>Dopuszczalna wilgotność</label>
+                <input type='number' class='form-control' id='humTrigger' name='humTrigger' aria-describedby='humTriggerHelp' placeholder='60' value='${humTrigger}'>
+                <small id='humTriggerHelp' class='form-text text-muted'>Wartość procentowa w przedziale 1-100%, po przekroczeniu tej wartości czujnik załączy wentylator.</small>
+            </div>
+            <div class='form-group'>
+                <label for='addHistoryInterval'>Interwał dodawania do historii</label>
+                <input type='number' class='form-control' id='addHistoryInterval' name='addHistoryInterval' aria-describedby='addHistoryIntervalHelp' placeholder='120' value='${addHistoryInterval}'>
+                <small id='addHistoryIntervalHelp' class='form-text text-muted'>Wartość podana w sekundach, określa co jaki czas kolejny pomiar zostanie dodany do historii.</small>
+            </div>
+            <div class='card-body'>
+            <button type='submit' class='btn btn-warning' formaction='/config'>Zapisz konfiguracje</button>
+            <button type='submit' class='btn btn-danger' formaction='/factoryReset'>Zresetuj do ustawień fabrycznych</button>
             </div>
         </form>
     </div>
 
-    <div class="container-fluid mb-4">
-        <form class="card" action="/update" method="POST">
-            <div class="card-header alert alert-warning" role="alert">
+    <div class='container-fluid mb-4'>
+        <form class='card' action='/update' method='POST'>
+            <div class='card-header alert alert-warning' role='alert'>
               Aktualizacja
             </div>
-            <div class="card-body">
-            <div class="form-group">
-                <label for="url">URL do pliku z firmware.</label>
-                <input type="url" class="form-control" id="url" name="url" aria-describedby="urlHelp" placeholder="http://jakis.poprawny.url">
-                <small id="urlHelp" class="form-text text-muted">Proszę wskazać poprawny URL gdzie znajduje się nowy plik z firmware. Czujnik wczyta ten plik i wgra go do pamięci flash, po czym się zrestartuje.</small>
+            <div class='card-body'>
+            <div class='form-group'>
+                <label for='url'>URL do pliku z firmware.</label>
+                <input type='url' class='form-control' id='url' name='url' aria-describedby='urlHelp' placeholder='http://jakis.poprawny.url'>
+                <small id='urlHelp' class='form-text text-muted'>Proszę wskazać poprawny URL gdzie znajduje się nowy plik z firmware. Czujnik wczyta ten plik i wgra go do pamięci flash, po czym się zrestartuje.</small>
             </div>
-            <button type="submit" class="btn btn-danger" formaction="/update">Rozpocznij aktualizację</button>
+            <button type='submit' class='btn btn-danger' formaction='/update'>Rozpocznij aktualizację</button>
             </div>
         </form>
     </div>
 
 
 <script>
-var ctx = document.getElementById("myChart").getContext('2d');
+var ctx = document.getElementById('myChart').getContext('2d');
+window.chartColors = {
+    red: 'rgb(255, 99, 132)',
+    blue: 'rgb(54, 162, 235)',
+};
 var myChart = new Chart(ctx, {
     type: 'line',
     data: {
-        labels: ["Red", "Blue", "Yellow", "Green", "Purple", "Orange"],
+        labels: [${dataLabels}],
         datasets: [
         {
             label: 'Temperatura',
-            data: [12, 19, 3, 5, 2, 3],
+            data: [${dataTemp}],
             borderWidth: 3,
-            borderColor: "rgba(255, 99, 132, 0.5)",
-            fill: false
+            pointRadius: 2,
+            borderColor: window.chartColors.red,
+            backgroundColor: window.chartColors.red,
+            fill: false,
+            yAxisID: 'y-axis-temp'
         },
         {
             label: 'Wilgotność',
-            data: [2, 9, 13, 15, 12, 13],
+            data: [${dataHum}],
             borderWidth: 3,
-            borderColor: "rgba(255, 159, 64, 0.5)",
-            fill: false
+            pointRadius: 2,
+            borderColor: window.chartColors.blue,
+            backgroundColor: window.chartColors.blue,
+            fill: false,
+            yAxisID: 'y-axis-hum'
         }
         ]
     },
     options: {
         scales: {
             yAxes: [{
-                ticks: {
-                    beginAtZero:true
+                type: 'linear', 
+                display: true,
+                position: 'left',
+                id: 'y-axis-temp',
+                scaleLabel: {
+                    display: true,
+                    labelString: 'Temperatura'
                 }
-            }]
+            }, {
+                type: 'linear', 
+                display: true,
+                position: 'right',
+                id: 'y-axis-hum',
+                scaleLabel: {
+                    display: true,
+                    labelString: 'Wlgotność'
+                },
+                gridLines: {
+                    drawOnChartArea: false,
+                },
+            }],
         },
         elements: {
             line: {
@@ -113,6 +166,8 @@ var myChart = new Chart(ctx, {
         }
     }
 });
+
 </script>
 </body>
 </html>
+)"

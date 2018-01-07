@@ -122,19 +122,23 @@ String EnvLogic::getDisplayFan() {
   } else {
     fanTime = millis() - turnOnFanMillis;
   }
-  String text = "Nawiew ";
-  fanTime /= 1000;
-  if (fanTime < 60) {
-    text += fanTime;
+  return "Nawiew " + millisToTime(fanTime);
+}
+
+String millisToTime(long mil) {
+  String text;
+  mil /= 1000;
+  if (mil < 60) {
+    text += mil;
     text += "s";
 
-  } else if (fanTime < 3600){
-    text += fanTime / 60;
+  } else if (mil < 3600){
+    text += mil / 60;
     text += ":";
-    if (fanTime % 60 < 10) {
+    if (mil % 60 < 10) {
       text += "0";
     }
-    text += fanTime % 60;
+    text += mil % 60;
   }
   return text;
 }

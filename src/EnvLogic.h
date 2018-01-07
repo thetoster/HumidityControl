@@ -66,4 +66,6 @@ class EnvLogic {
 
 extern EnvLogic envLogic;
 
+String millisToTime(long mil);
+
 #endif /* EnvLogic_hpp */
