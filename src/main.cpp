@@ -10,6 +10,12 @@
 SSD1306  display(0x3c, 5, 4);
 
 void setup() {
+  pinMode(12, OUTPUT);
+  digitalWrite(12, LOW);
+  pinMode(13, OUTPUT);
+  digitalWrite(13, LOW);
+  pinMode(14, INPUT);
+  pinMode(16, INPUT);
   display.init();
   display.displayOn();
   display.normalDisplay();

@@ -63,10 +63,10 @@ void EnvLogic::update() {
 
   if (wasFanOn == false && isFanEnabled()) {
     turnOnFanMillis = millis();
-    digitalWrite(6, HIGH);
+    digitalWrite(12, HIGH);
 
   } else if (isFanEnabled() == false) {
-    digitalWrite(6, LOW);
+    digitalWrite(12, LOW);
   }
 
   //store new measurement
