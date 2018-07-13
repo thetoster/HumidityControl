@@ -6,10 +6,18 @@
 #include "EnvLogic.h"
 #include "MyServer.h"
 #include "Updater.h"
+#include "Prefs.h"
 
 SSD1306  display(0x3c, 5, 4);
 
 void setup() {
+  pinMode(12, OUTPUT);
+  digitalWrite(12, LOW);
+  pinMode(13, OUTPUT);
+  digitalWrite(13, LOW);
+  pinMode(14, INPUT);
+  pinMode(16, INPUT);
+  Serial.begin(115200);
   display.init();
   display.displayOn();
   display.normalDisplay();
@@ -17,6 +25,13 @@ void setup() {
   display.setColor(WHITE);
   display.setTextAlignment(TEXT_ALIGN_LEFT);
   display.flipScreenVertically();
+
+  //dump prefs
+  Serial.print("In Net Name:");
+  Serial.println(prefs.storage.inNetworkName);
+  Serial.print("Password:");
+  Serial.println(prefs.storage.password);
+  Serial.flush();
 }
 
 void normalMode() {
