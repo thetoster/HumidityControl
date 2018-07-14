@@ -40,12 +40,13 @@ static const int totalMeasurementMemoryLimit = 10*1024;
 EnvLogic envLogic;
 
 EnvLogic::EnvLogic() :
-  requestedRunToMillis(0), lastTemp(0), lastHum(0),
+  lastTemp(0), lastHum(0), requestedRunToMillis(0),
   turnOnFanMillis(0), lastMeasurementMillis(0), lastUpdate(0) {
 }
 
 void EnvLogic::requestRunFor(int seconds) {
   requestedRunToMillis = millis() + seconds * 1000;
+  digitalWrite(12, HIGH);
 }
 
 int EnvLogic::getMaxAllowedHum() {
@@ -86,7 +87,7 @@ void EnvLogic::addMeasurement(long mil) {
 }
 
 bool EnvLogic::isFanEnabled() {
-  return (lastHum >= getMaxAllowedHum()) || (millis() < requestedRunToMillis);
+  return (lastHum >= getMaxAllowedHum()) || (millis() < (unsigned long)requestedRunToMillis);
 }
 
 String EnvLogic::getDisplayTemp() {
@@ -116,7 +117,7 @@ String EnvLogic::getDisplayHum() {
 
 String EnvLogic::getDisplayFan() {
   long fanTime;
-  if (millis() < requestedRunToMillis) {
+  if (millis() < (unsigned long)requestedRunToMillis) {
     fanTime = requestedRunToMillis - millis();
 
   } else {
