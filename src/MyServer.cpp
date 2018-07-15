@@ -43,6 +43,7 @@
 #include "Prefs.h"
 #include "Updater.h"
 
+const static String versionString = "1.0.0";
 const static String rootHtml =
     #include "www/index.html"
 ;
@@ -85,6 +86,18 @@ static void handleFactoryConfig() {
   myServer.switchToConfigMode();
 }
 
+static void handleVersion() {
+  if (checkAuth() == false) {
+    return;
+  }
+  DynamicJsonBuffer  jsonBuffer;
+  JsonObject& root = jsonBuffer.createObject();
+  root["version"] = versionString;
+  String response;
+  root.printTo(response);
+  httpServer.send(200, "application/json", response);
+}
+
 static void handleGetConfig() {
   if (checkAuth() == false) {
     return;
@@ -105,7 +118,7 @@ static String getStringArg(String argName, int maxLen, bool* isError) {
   *isError = false;
   if (httpServer.hasArg(argName)) {
     result = httpServer.arg(argName);
-    if (result.length() >= maxLen) {
+    if (result.length() >= (unsigned int)maxLen) {
       String resp = "406: Not Acceptable, '" + argName + "' to long.";
       httpServer.send(406, "text/plain", resp);
       *isError = true;
@@ -219,7 +232,7 @@ static void getHistoryData(int count, String& labelData, String &tempData, Strin
   tempData = "";
   humData = "";
   auto m = envLogic.measurements.begin();
-  if (count < envLogic.measurements.size()) {
+  if ((unsigned int )count < envLogic.measurements.size()) {
     m += envLogic.measurements.size() - count;
   }
   long mil = millis();
@@ -241,7 +254,6 @@ static void handleRoot() {
   if (checkAuth() == false) {
     return;
   }
-  bool fail = false;
   //put config inside
   String html = rootHtml;
   html.replace("${ssid}", prefs.storage.ssid);
@@ -325,7 +337,6 @@ void MyServer::connectToAccessPoint() {
   WiFi.softAPdisconnect(false);
   WiFi.begin(prefs.storage.ssid, prefs.storage.password);
   WiFi.setAutoReconnect(true);
-  long time = millis();
 }
 
 void MyServer::generateRandomPassword() {
@@ -385,6 +396,7 @@ void MyServer::restart() {
   httpServer.on("/run", HTTP_POST, handleRun);
   httpServer.on("/clearHistory", handleClearHistory);
   httpServer.on("/update", HTTP_POST, handleUpdate);
+  httpServer.on("/version", HTTP_GET, handleVersion);
   httpServer.onNotFound(handleNotFound);
 
   httpServer.begin();
