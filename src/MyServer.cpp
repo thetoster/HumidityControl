@@ -43,7 +43,7 @@
 #include "Prefs.h"
 #include "Updater.h"
 
-const static String versionString = "1.0.0";
+const String versionString = "1.1.0";
 const static String rootHtml =
     #include "www/index.html"
 ;
@@ -318,7 +318,7 @@ static void handleStatus() {
 }
 
 MyServer::MyServer() {
-  restart();
+//  restart();
 }
 
 void MyServer::switchToConfigMode() {
@@ -337,6 +337,7 @@ void MyServer::connectToAccessPoint() {
   WiFi.softAPdisconnect(false);
   WiFi.begin(prefs.storage.ssid, prefs.storage.password);
   WiFi.setAutoReconnect(true);
+  WiFi.setAutoConnect(true);
 }
 
 void MyServer::generateRandomPassword() {
@@ -375,11 +376,12 @@ void MyServer::restart() {
   httpServer.stop();
   WiFi.softAPdisconnect(false);
   WiFi.setAutoReconnect(false);
+  WiFi.setAutoConnect(false);
   WiFi.disconnect(false);
   WiFi.enableAP(false);
   WiFi.enableSTA(false);
 
-  needsConfig = prefs.storage.ssid[0] == 0;
+  needsConfig = not prefs.hasPrefs();
   if (needsConfig) {
     generateRandomPassword();
     enableSoftAP();

@@ -36,21 +36,33 @@
 #include <EnvLogic.h>
 #include "Prefs.h"
 
-static const int totalMeasurementMemoryLimit = 10*1024;
+static constexpr int totalMeasurementMemoryLimit = 10 * 1024;
+static constexpr long MIN_AUTO_TIME = 10 * 1000;
+
 EnvLogic envLogic;
 
 EnvLogic::EnvLogic() :
   lastTemp(0), lastHum(0), requestedRunToMillis(0),
-  turnOnFanMillis(0), lastMeasurementMillis(0), lastUpdate(0) {
+  turnOnFanMillis(0), lastMeasurementMillis(0), lastUpdate(0), autoFanOnMillis(0),
+  lastMotorState(true) {
+  fanMotor(false);
 }
 
 void EnvLogic::requestRunFor(int seconds) {
   requestedRunToMillis = millis() + seconds * 1000;
-  digitalWrite(12, HIGH);
+  fanMotor(true);
 }
 
 int EnvLogic::getMaxAllowedHum() {
   return prefs.storage.humidityTrigger;
+}
+
+void EnvLogic::fanMotor(bool enabled) {
+  if (lastMotorState != enabled) {
+    Serial.println(enabled ? "Fan:ON" : "Fan:OFF");
+    digitalWrite(FAN_CONTROL_PIN, enabled ? HIGH : LOW);
+    lastMotorState = enabled;
+  }
 }
 
 void EnvLogic::update() {
@@ -60,14 +72,21 @@ void EnvLogic::update() {
     lastTemp = sht.getTemperature();
     lastHum = sht.getHumidity();
     lastUpdate = millis();
+
+    if (lastHum >= getMaxAllowedHum()) {
+      autoFanOnMillis =  MIN_AUTO_TIME;
+
+    } else {
+      autoFanOnMillis --;
+    }
   }
 
   if (wasFanOn == false && isFanEnabled()) {
     turnOnFanMillis = millis();
-    digitalWrite(12, HIGH);
+    fanMotor(true);
 
   } else if (isFanEnabled() == false) {
-    digitalWrite(12, LOW);
+    fanMotor(false);
   }
 
   //store new measurement
@@ -87,7 +106,7 @@ void EnvLogic::addMeasurement(long mil) {
 }
 
 bool EnvLogic::isFanEnabled() {
-  return (lastHum >= getMaxAllowedHum()) || (millis() < (unsigned long)requestedRunToMillis);
+  return (autoFanOnMillis > 0) || (millis() < (unsigned long)requestedRunToMillis);
 }
 
 String EnvLogic::getDisplayTemp() {

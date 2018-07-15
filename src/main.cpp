@@ -11,8 +11,8 @@
 SSD1306  display(0x3c, 5, 4);
 
 void setup() {
-  pinMode(12, OUTPUT);
-  digitalWrite(12, LOW);
+  pinMode(FAN_CONTROL_PIN, OUTPUT);
+  digitalWrite(FAN_CONTROL_PIN, LOW);
   pinMode(13, OUTPUT);
   digitalWrite(13, LOW);
   pinMode(14, INPUT);
@@ -25,13 +25,25 @@ void setup() {
   display.setColor(WHITE);
   display.setTextAlignment(TEXT_ALIGN_LEFT);
   display.flipScreenVertically();
+  display.setFont(ArialMT_Plain_16);
+  display.drawString(0, 0, "Bootowanie");
+  display.drawString(0, 16, versionString);
+  display.display();
+
+  prefs.load();
+  myServer.restart();
 
   //dump prefs
-  Serial.print("In Net Name:");
-  Serial.println(prefs.storage.inNetworkName);
-  Serial.print("Password:");
-  Serial.println(prefs.storage.password);
+  if (prefs.hasPrefs()) {
+    Serial.print("In Net Name:");
+    Serial.println(prefs.storage.inNetworkName);
+    Serial.print("Password:");
+    Serial.println(prefs.storage.password);
+  } else {
+    Serial.println("No prefs!");
+  }
   Serial.flush();
+
 }
 
 void normalMode() {

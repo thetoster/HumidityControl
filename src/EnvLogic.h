@@ -59,13 +59,16 @@ class EnvLogic {
     long turnOnFanMillis;
     long lastMeasurementMillis;
     long lastUpdate;
+    long autoFanOnMillis;
+    bool lastMotorState;
 
     int getMaxAllowedHum();
     void addMeasurement(long mil);
+    void fanMotor(bool enabled);
 };
 
 extern EnvLogic envLogic;
-
+constexpr int FAN_CONTROL_PIN = 12;
 String millisToTime(long mil);
 
 #endif /* EnvLogic_hpp */

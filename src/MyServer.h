@@ -56,5 +56,6 @@ class MyServer {
 };
 
 extern MyServer myServer;
+extern const String versionString;
 
 #endif /* WifiServer_hpp */
