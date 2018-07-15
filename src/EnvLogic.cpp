@@ -37,13 +37,13 @@
 #include "Prefs.h"
 
 static constexpr int totalMeasurementMemoryLimit = 10 * 1024;
-static constexpr long MIN_AUTO_TIME = 10 * 1000;
+static constexpr long MIN_AUTO_TIME_SEC = 10;
 
 EnvLogic envLogic;
 
 EnvLogic::EnvLogic() :
   lastTemp(0), lastHum(0), requestedRunToMillis(0),
-  turnOnFanMillis(0), lastMeasurementMillis(0), lastUpdate(0), autoFanOnMillis(0),
+  turnOnFanMillis(0), lastMeasurementMillis(0), lastUpdate(0), autoFanOnSec(0),
   lastMotorState(true) {
   fanMotor(false);
 }
@@ -74,10 +74,10 @@ void EnvLogic::update() {
     lastUpdate = millis();
 
     if (lastHum >= getMaxAllowedHum()) {
-      autoFanOnMillis =  MIN_AUTO_TIME;
+      autoFanOnSec =  MIN_AUTO_TIME_SEC;
 
     } else {
-      autoFanOnMillis --;
+      autoFanOnSec --;
     }
   }
 
@@ -106,7 +106,7 @@ void EnvLogic::addMeasurement(long mil) {
 }
 
 bool EnvLogic::isFanEnabled() {
-  return (autoFanOnMillis > 0) || (millis() < (unsigned long)requestedRunToMillis);
+  return (autoFanOnSec > 0) || (millis() < (unsigned long)requestedRunToMillis);
 }
 
 String EnvLogic::getDisplayTemp() {

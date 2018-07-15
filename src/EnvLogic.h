@@ -59,7 +59,7 @@ class EnvLogic {
     long turnOnFanMillis;
     long lastMeasurementMillis;
     long lastUpdate;
-    long autoFanOnMillis;
+    long autoFanOnSec;
     bool lastMotorState;
 
     int getMaxAllowedHum();
