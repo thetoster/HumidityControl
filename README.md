@@ -21,6 +21,7 @@ Here is shourt summary of rest api. Each call requires authentication (see prope
 | /clearHistory | GET    | Wipeouts all historical readings. |
 | /run          | POST   | Enable fan relay for given amount of seconds, regardles of humidity reading. Single argument ```time``` is expected with runtime in seconds |
 | /update       | POST   | Starts firmware update, it accepts single agrument ```url``` which should point to new firmware image. |
+| /version      | GET    | To get current version of firmware. |
 
 ## Authentication.
 Currently HTTP Digest auth is used.
