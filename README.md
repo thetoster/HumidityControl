@@ -30,7 +30,7 @@ Currently HTTP Digest auth is used.
 
 ## Hardware
 In folder hardware are all needed things to work with board and schematic. If you would like you can also use this: 
-(Board)[https://oshpark.com/shared_projects/PgFfqdfC]
+[Board](https://oshpark.com/shared_projects/PgFfqdfC)
 
 # Thanks goes to
 
