@@ -318,7 +318,7 @@ static void handleStatus() {
 }
 
 MyServer::MyServer() {
-//  restart();
+
 }
 
 void MyServer::switchToConfigMode() {

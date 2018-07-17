@@ -29,45 +29,36 @@
  OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
- EnvLogic.h
- Created on: Dec 27, 2017
+ Buttons.cpp
+ Created on: Jul 17, 2018
  Author: Bartłomiej Żarnowski (Toster)
  */
-#ifndef EnvLogic_hpp
-#define EnvLogic_hpp
 
-#include <SHT21.h>
-#include <vector>
-#include "Measurement.h"
+#include "Prefs.h"
+#include "Buttons.h"
+#include <Arduino.h>
 
-class EnvLogic {
-  public:
-    int lastTemp;
-    int lastHum;
-    std::vector<Measurement> measurements;
+Buttons buttons;
 
-    EnvLogic();
-    void update();
-    String getDisplayTemp();
-    String getDisplayHum();
-    String getDisplayFan();
-    bool isFanEnabled();
-    void requestRunFor(int seconds);
-  private:
-    SHT21 sht;
-    long requestedRunToMillis;
-    long turnOnFanMillis;
-    long lastMeasurementMillis;
-    long lastUpdate;
-    long autoFanOnSec;
-    bool lastMotorState;
+Buttons::Buttons() {
+	button1.begin();
+	button2.begin();
+}
 
-    int getMaxAllowedHum();
-    void addMeasurement(long mil);
-    void fanMotor(bool enabled);
-};
+Buttons::~Buttons() {
+}
 
-extern EnvLogic envLogic;
-String millisToTime(long mil);
+void Buttons::update() {
+	button1.read();
+	button2.read();
 
-#endif /* EnvLogic_hpp */
+	if (button1.wasPressed()) {
+		doFactorySettings();
+	}
+}
+
+void Buttons::doFactorySettings() {
+	prefs.defaultValues();
+	prefs.save();
+	ESP.reset();
+}

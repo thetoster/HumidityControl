@@ -29,45 +29,32 @@
  OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
- EnvLogic.h
- Created on: Dec 27, 2017
+ Buttons.h
+ Created on: Jul 17, 2018
  Author: Bartłomiej Żarnowski (Toster)
  */
-#ifndef EnvLogic_hpp
-#define EnvLogic_hpp
 
-#include <SHT21.h>
-#include <vector>
-#include "Measurement.h"
+#ifndef SRC_BUTTONS_H_
+#define SRC_BUTTONS_H_
 
-class EnvLogic {
-  public:
-    int lastTemp;
-    int lastHum;
-    std::vector<Measurement> measurements;
+#include <JC_Button.h>
 
-    EnvLogic();
-    void update();
-    String getDisplayTemp();
-    String getDisplayHum();
-    String getDisplayFan();
-    bool isFanEnabled();
-    void requestRunFor(int seconds);
-  private:
-    SHT21 sht;
-    long requestedRunToMillis;
-    long turnOnFanMillis;
-    long lastMeasurementMillis;
-    long lastUpdate;
-    long autoFanOnSec;
-    bool lastMotorState;
+class Buttons {
 
-    int getMaxAllowedHum();
-    void addMeasurement(long mil);
-    void fanMotor(bool enabled);
+public:
+	Buttons();
+	virtual ~Buttons();
+	void update();
+
+private:
+  const uint8_t BTN_1_PIN = 14;
+	const uint8_t BTN_2_PIN = 16;
+
+	Button button1{BTN_1_PIN, 25, false, true};
+	Button button2{BTN_2_PIN, 25, false, true};
+
+	void doFactorySettings();
 };
 
-extern EnvLogic envLogic;
-String millisToTime(long mil);
-
-#endif /* EnvLogic_hpp */
+extern Buttons buttons;
+#endif /* SRC_BUTTONS_H_ */

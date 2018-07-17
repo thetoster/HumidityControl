@@ -7,16 +7,11 @@
 #include "MyServer.h"
 #include "Updater.h"
 #include "Prefs.h"
+#include "Buttons.h"
 
 SSD1306  display(0x3c, 5, 4);
 
 void setup() {
-  pinMode(FAN_CONTROL_PIN, OUTPUT);
-  digitalWrite(FAN_CONTROL_PIN, LOW);
-  pinMode(13, OUTPUT);
-  digitalWrite(13, LOW);
-  pinMode(14, INPUT);
-  pinMode(16, INPUT);
   Serial.begin(115200);
   display.init();
   display.displayOn();
@@ -84,6 +79,8 @@ void loop() {
   if (updater.update()) {
     return;
   }
+
+  buttons.update();
 
   //no update in progress
   if (myServer.isServerConfigured()) {

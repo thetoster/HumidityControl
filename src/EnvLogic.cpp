@@ -39,12 +39,21 @@
 static constexpr int totalMeasurementMemoryLimit = 10 * 1024;
 static constexpr long MIN_AUTO_TIME_SEC = 10;
 
+constexpr int FAN_CONTROL_PIN = 12;
+constexpr int UNUSED_CTRL_PIN = 13;
+
 EnvLogic envLogic;
 
 EnvLogic::EnvLogic() :
   lastTemp(0), lastHum(0), requestedRunToMillis(0),
   turnOnFanMillis(0), lastMeasurementMillis(0), lastUpdate(0), autoFanOnSec(0),
   lastMotorState(true) {
+
+  pinMode(FAN_CONTROL_PIN, OUTPUT);
+  digitalWrite(FAN_CONTROL_PIN, LOW);
+  pinMode(UNUSED_CTRL_PIN, OUTPUT);
+  digitalWrite(UNUSED_CTRL_PIN, LOW);
+
   fanMotor(false);
 }
 
