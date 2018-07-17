@@ -39,15 +39,56 @@
 Prefs prefs;
 
 Prefs::Prefs() {
+/*
+  defaultValues();
+
   EEPROM.begin(512);
   EEPROM.get(0, storage);
   EEPROM.end();
+
   if (storage.crc != calcCRC()) {
+    defaultValues();
+  }
+*/
+}
+
+void Prefs::load() {
+  EEPROM.begin(512);
+  EEPROM.get(0, storage);
+  EEPROM.end();
+  uint8_t expectedCrc = calcCRC();
+
+  Serial.print("StorageCrc:");
+  Serial.println(storage.crc);
+  Serial.print("Expected CRC:");
+  Serial.println(expectedCrc);
+  Serial.print("Is zero prefs:");
+  Serial.println(isZeroPrefs());
+  Serial.flush();
+
+  //if (storage.crc != expectedCrc || isZeroPrefs()) {
+  if (not hasPrefs()) {
     defaultValues();
   }
 }
 
+bool Prefs::hasPrefs() {
+  return (storage.crc == calcCRC()) && (not isZeroPrefs()) && (prefs.storage.ssid[0] != 0);
+}
+
+bool Prefs::isZeroPrefs() {
+  const uint8_t* data = (uint8_t*)&storage;
+  for(size_t t = 0; t < sizeof(storage); t++) {
+    if (*data != 0) {
+      return false;
+    }
+    data++;
+  }
+  return true;
+}
+
 void Prefs::defaultValues() {
+  Serial.println("Reset prefs to default");
   storage.humidityTrigger = 60;
   storage.secondsToStoreMeasurements = 60;
   memset(&storage.ssid[0], 0, sizeof(storage.ssid));

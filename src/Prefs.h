@@ -52,8 +52,12 @@ class Prefs {
     Prefs();
     void save();
     void defaultValues();
+    bool hasPrefs();
+    void load();
   private:
     uint8_t calcCRC();
+
+    bool isZeroPrefs();
 };
 
 extern Prefs prefs;

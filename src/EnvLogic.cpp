@@ -36,20 +36,33 @@
 #include <EnvLogic.h>
 #include "Prefs.h"
 
-static const int totalMeasurementMemoryLimit = 10*1024;
+static constexpr int totalMeasurementMemoryLimit = 10 * 1024;
+static constexpr long MIN_AUTO_TIME_SEC = 10;
+
 EnvLogic envLogic;
 
 EnvLogic::EnvLogic() :
-  requestedRunToMillis(0), lastTemp(0), lastHum(0),
-  turnOnFanMillis(0), lastMeasurementMillis(0), lastUpdate(0) {
+  lastTemp(0), lastHum(0), requestedRunToMillis(0),
+  turnOnFanMillis(0), lastMeasurementMillis(0), lastUpdate(0), autoFanOnSec(0),
+  lastMotorState(true) {
+  fanMotor(false);
 }
 
 void EnvLogic::requestRunFor(int seconds) {
   requestedRunToMillis = millis() + seconds * 1000;
+  fanMotor(true);
 }
 
 int EnvLogic::getMaxAllowedHum() {
   return prefs.storage.humidityTrigger;
+}
+
+void EnvLogic::fanMotor(bool enabled) {
+  if (lastMotorState != enabled) {
+    Serial.println(enabled ? "Fan:ON" : "Fan:OFF");
+    digitalWrite(FAN_CONTROL_PIN, enabled ? HIGH : LOW);
+    lastMotorState = enabled;
+  }
 }
 
 void EnvLogic::update() {
@@ -59,14 +72,21 @@ void EnvLogic::update() {
     lastTemp = sht.getTemperature();
     lastHum = sht.getHumidity();
     lastUpdate = millis();
+
+    if (lastHum >= getMaxAllowedHum()) {
+      autoFanOnSec =  MIN_AUTO_TIME_SEC;
+
+    } else {
+      autoFanOnSec --;
+    }
   }
 
   if (wasFanOn == false && isFanEnabled()) {
     turnOnFanMillis = millis();
-    digitalWrite(12, HIGH);
+    fanMotor(true);
 
   } else if (isFanEnabled() == false) {
-    digitalWrite(12, LOW);
+    fanMotor(false);
   }
 
   //store new measurement
@@ -86,7 +106,7 @@ void EnvLogic::addMeasurement(long mil) {
 }
 
 bool EnvLogic::isFanEnabled() {
-  return (lastHum >= getMaxAllowedHum()) || (millis() < requestedRunToMillis);
+  return (autoFanOnSec > 0) || (millis() < (unsigned long)requestedRunToMillis);
 }
 
 String EnvLogic::getDisplayTemp() {
@@ -116,7 +136,7 @@ String EnvLogic::getDisplayHum() {
 
 String EnvLogic::getDisplayFan() {
   long fanTime;
-  if (millis() < requestedRunToMillis) {
+  if (millis() < (unsigned long)requestedRunToMillis) {
     fanTime = requestedRunToMillis - millis();
 
   } else {
