@@ -60,7 +60,6 @@ class EnvLogic {
     SHT21 sht;
     Fan fan{FAN_CONTROL_PIN};
     long requestedRunToMillis;
-    long lastMeasurementMillis;
     long lastUpdate;
 
     int getMaxAllowedHum();
@@ -68,6 +67,7 @@ class EnvLogic {
 
     bool isTooWet();
     bool fanIsRequested();
+    void collectMeasurementIfNeeded();
 };
 
 extern EnvLogic envLogic;

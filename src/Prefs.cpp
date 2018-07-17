@@ -76,7 +76,6 @@ bool Prefs::isZeroPrefs() {
 void Prefs::defaultValues() {
   Serial.println("Reset prefs to default");
   storage.humidityTrigger = 60;
-  storage.secondsToStoreMeasurements = 60;
   storage.muteFanOn = 10;
   storage.muteFanOff = 10;
   memset(&storage.ssid[0], 0, sizeof(storage.ssid));

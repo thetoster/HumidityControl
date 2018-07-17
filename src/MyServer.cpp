@@ -112,7 +112,6 @@ static void handleGetConfig() {
   root["ssid"] = prefs.storage.ssid;
   root["humTrigger"] = prefs.storage.humidityTrigger;
   root["inNetName"] = prefs.storage.inNetworkName;
-  root["addHistoryInterval"] = prefs.storage.secondsToStoreMeasurements;
   root["muteFanOn"] = prefs.storage.muteFanOn;
   root["muteFanOff"] = prefs.storage.muteFanOff;
   String response;
@@ -173,11 +172,6 @@ static void handleSetConfig() {
     return;
   }
 
-  int histInt = getIntArg("addHistoryInterval", 255, &fail);
-  if (fail == true) {
-    return;
-  }
-
   int muteFanOn = getIntArg("muteFanOn", 255, &fail);
   if (fail == true) {
     return;
@@ -193,10 +187,6 @@ static void handleSetConfig() {
   bool restartNetwork = false;
   if (humTrig > 0) {
     prefs.storage.humidityTrigger = humTrig;
-    changed = true;
-  }
-  if (histInt > 0) {
-    prefs.storage.secondsToStoreMeasurements = histInt;
     changed = true;
   }
   if (muteFanOn > 0) {
@@ -297,7 +287,6 @@ static void handleSetup() {
   html.replace("${ssid}", prefs.storage.ssid);
   html.replace("${inNetName}", prefs.storage.inNetworkName);
   html.replace("${humTrigger}", String(prefs.storage.humidityTrigger));
-  html.replace("${addHistoryInterval}", String(prefs.storage.secondsToStoreMeasurements));
   html.replace("${muteFanOff}", String(prefs.storage.muteFanOff));
   html.replace("${muteFanOn}", String(prefs.storage.muteFanOn));
   httpServer.send(200, "text/html", html);

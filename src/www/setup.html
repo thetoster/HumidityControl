@@ -43,11 +43,6 @@ R"(
                 <small id='humTriggerHelp' class='form-text text-muted'>Wartość procentowa w przedziale 1-100%, po przekroczeniu tej wartości czujnik załączy wentylator.</small>
             </div>
             <div class='form-group'>
-                <label for='addHistoryInterval'>Interwał dodawania do historii</label>
-                <input type='number' class='form-control' id='addHistoryInterval' name='addHistoryInterval' aria-describedby='addHistoryIntervalHelp' placeholder='120' value='${addHistoryInterval}'>
-                <small id='addHistoryIntervalHelp' class='form-text text-muted'>Wartość podana w sekundach, określa co jaki czas kolejny pomiar zostanie dodany do historii.</small>
-            </div>
-            <div class='form-group'>
                 <label for='muteFanOn'>Czas odczekania do kolejnego uruchomienia wiatraka</label>
                 <input type='number' class='form-control' id='muteFanOn' name='muteFanOn' aria-describedby='muteFanOnHelp' placeholder='10' value='${muteFanOn}'>
                 <small id='muteFanOnHelp' class='form-text text-muted'>Wartość podana w sekundach. Tyle sekund musi upłynąć zanim wiatrak ponownie będzie można włączyć (od momentu wyłączenia).</small>

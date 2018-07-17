@@ -41,8 +41,7 @@ static constexpr int totalMeasurementMemoryLimit = 4 * 1024;
 EnvLogic envLogic;
 
 EnvLogic::EnvLogic() :
-  lastTemp(0), lastHum(0), requestedRunToMillis(0),
-  lastMeasurementMillis(0), lastUpdate(0) {
+  lastTemp(0), lastHum(0), requestedRunToMillis(0), lastUpdate(0) {
 
   pinMode(UNUSED_CTRL_PIN, OUTPUT);
   digitalWrite(UNUSED_CTRL_PIN, LOW);
@@ -76,15 +75,22 @@ void EnvLogic::update() {
   fan.shouldRun = isTooWet() or fanIsRequested();
   fan.update();
 
-  //store new measurement
-  long mil = millis();
-  if (mil - lastMeasurementMillis > prefs.storage.secondsToStoreMeasurements * 1000) {
-    addMeasurement(mil);
-  }
+  collectMeasurementIfNeeded();
+}
+
+void EnvLogic::collectMeasurementIfNeeded() {
+	long mil = millis();
+	if (measurements.size() > 0) {
+		const Measurement& mes = measurements.back();
+		if ((lastHum != mes.humidity) or (lastTemp != mes.temp)) {
+			addMeasurement(mil);
+		}
+	} else {
+		addMeasurement(mil);
+	}
 }
 
 void EnvLogic::addMeasurement(long mil) {
-  lastMeasurementMillis = mil;
   int totalSize = sizeof(Measurement) * measurements.size() + 1;
   if (totalSize >= totalMeasurementMemoryLimit) {
     measurements.erase(measurements.begin());
