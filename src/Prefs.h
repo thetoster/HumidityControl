@@ -44,12 +44,14 @@ struct SavedPrefs {
     char inNetworkName[20];
     int8_t humidityTrigger;
     uint8_t secondsToStoreMeasurements;
+    uint8_t muteFanOn;	//request to turn fan on will be ignored for this long after fan turn off
+    uint8_t muteFanOff; //request to turn fan off will be ignored for this long after fan turn on (minimal run time)
 };
 
 class Prefs {
   public:
     SavedPrefs storage;
-    Prefs();
+
     void save();
     void defaultValues();
     bool hasPrefs();

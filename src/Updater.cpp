@@ -82,7 +82,8 @@ void Updater::showUpdateInfo() {
 }
 
 String Updater::getDots() {
-  String dots = "";
+  String dots;
+  dots.reserve(delayTimer);
   for(int t = 0; t < delayTimer; t++) {
     dots += ".";
   }

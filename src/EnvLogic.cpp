@@ -37,66 +37,44 @@
 #include "Prefs.h"
 
 static constexpr int totalMeasurementMemoryLimit = 4 * 1024;
-static constexpr long MIN_AUTO_TIME_SEC = 10;
-
-constexpr int FAN_CONTROL_PIN = 12;
-constexpr int UNUSED_CTRL_PIN = 13;
 
 EnvLogic envLogic;
 
 EnvLogic::EnvLogic() :
   lastTemp(0), lastHum(0), requestedRunToMillis(0),
-  turnOnFanMillis(0), lastMeasurementMillis(0), lastUpdate(0), autoFanOnSec(0),
-  lastMotorState(true) {
+  lastMeasurementMillis(0), lastUpdate(0) {
 
-  pinMode(FAN_CONTROL_PIN, OUTPUT);
-  digitalWrite(FAN_CONTROL_PIN, LOW);
   pinMode(UNUSED_CTRL_PIN, OUTPUT);
   digitalWrite(UNUSED_CTRL_PIN, LOW);
-
-  fanMotor(false);
+  fan.shouldRun = false;
 }
 
 void EnvLogic::requestRunFor(int seconds) {
   requestedRunToMillis = millis() + seconds * 1000;
-  fanMotor(true);
+  fan.shouldRun = true;
 }
 
 int EnvLogic::getMaxAllowedHum() {
   return prefs.storage.humidityTrigger;
 }
 
-void EnvLogic::fanMotor(bool enabled) {
-  if (lastMotorState != enabled) {
-    Serial.println(enabled ? "Fan:ON" : "Fan:OFF");
-    digitalWrite(FAN_CONTROL_PIN, enabled ? HIGH : LOW);
-    lastMotorState = enabled;
-  }
+bool EnvLogic::isTooWet() {
+	return lastHum > getMaxAllowedHum();
+}
+
+bool EnvLogic::fanIsRequested() {
+	return (millis() < (unsigned long)requestedRunToMillis);
 }
 
 void EnvLogic::update() {
-  bool wasFanOn = isFanEnabled();
-
   if (millis() - lastUpdate > 1000) {
     lastTemp = sht.getTemperature();
     lastHum = sht.getHumidity();
     lastUpdate = millis();
-
-    if (lastHum >= getMaxAllowedHum()) {
-      autoFanOnSec =  MIN_AUTO_TIME_SEC;
-
-    } else {
-      autoFanOnSec --;
-    }
   }
 
-  if (wasFanOn == false && isFanEnabled()) {
-    turnOnFanMillis = millis();
-    fanMotor(true);
-
-  } else if (isFanEnabled() == false) {
-    fanMotor(false);
-  }
+  fan.shouldRun = isTooWet() or fanIsRequested();
+  fan.update();
 
   //store new measurement
   long mil = millis();
@@ -114,31 +92,20 @@ void EnvLogic::addMeasurement(long mil) {
   measurements.push_back(Measurement(mil, lastHum, lastTemp));
 }
 
-bool EnvLogic::isFanEnabled() {
-  return (autoFanOnSec > 0) || (millis() < (unsigned long)requestedRunToMillis);
+bool EnvLogic::isFanRunning() {
+  return fan.isRunning();
 }
 
 String EnvLogic::getDisplayTemp() {
-  char buf[10];
-  memset(&buf[0], 0, 8);
-
-  itoa(lastTemp, &buf[0], 10);
   String temp = "Temp.:";
-  for(int t = 0; buf[t] != 0; t++) {
-    temp += buf[t];
-  }
+  temp += lastTemp;
   temp += "C";
   return temp;
 }
 
 String EnvLogic::getDisplayHum() {
-  char buf[10];
-  memset(&buf[0], 0, 8);
-  itoa(lastHum, &buf[0], 10);
   String hum = "Wilg.:";
-  for(int t = 0; buf[t] != 0; t++) {
-    hum += buf[t];
-  }
+  hum += lastHum;
   hum += "%";
   return hum;
 }
@@ -149,7 +116,7 @@ String EnvLogic::getDisplayFan() {
     fanTime = requestedRunToMillis - millis();
 
   } else {
-    fanTime = millis() - turnOnFanMillis;
+    fanTime = millis() - fan.getTurnOnFanMillis();
   }
   return "Nawiew " + millisToTime(fanTime);
 }

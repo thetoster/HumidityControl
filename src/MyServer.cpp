@@ -43,9 +43,14 @@
 #include "Prefs.h"
 #include "Updater.h"
 
-const String versionString = "1.1.0";
-const static String rootHtml =
-    #include "www/index.html"
+const String versionString = "1.2.0";
+
+static const char rootHtml[] PROGMEM =
+  #include "www/index.html"
+;
+
+static const char setupHtml[] PROGMEM =
+    #include "www/setup.html"
 ;
 
 ESP8266WebServer httpServer(80);
@@ -108,6 +113,8 @@ static void handleGetConfig() {
   root["humTrigger"] = prefs.storage.humidityTrigger;
   root["inNetName"] = prefs.storage.inNetworkName;
   root["addHistoryInterval"] = prefs.storage.secondsToStoreMeasurements;
+  root["muteFanOn"] = prefs.storage.muteFanOn;
+  root["muteFanOff"] = prefs.storage.muteFanOff;
   String response;
   root.printTo(response);
   httpServer.send(200, "application/json", response);
@@ -171,6 +178,16 @@ static void handleSetConfig() {
     return;
   }
 
+  int muteFanOn = getIntArg("muteFanOn", 255, &fail);
+  if (fail == true) {
+    return;
+  }
+
+  int muteFanOff = getIntArg("muteFanOff", 255, &fail);
+  if (fail == true) {
+    return;
+  }
+
   //now apply new values
   bool changed = false;
   bool restartNetwork = false;
@@ -180,6 +197,14 @@ static void handleSetConfig() {
   }
   if (histInt > 0) {
     prefs.storage.secondsToStoreMeasurements = histInt;
+    changed = true;
+  }
+  if (muteFanOn > 0) {
+    prefs.storage.muteFanOn = muteFanOn;
+    changed = true;
+  }
+  if (muteFanOff > 0) {
+    prefs.storage.muteFanOff = muteFanOff;
     changed = true;
   }
   if (name.length() > 0) {
@@ -255,16 +280,26 @@ static void handleRoot() {
     return;
   }
   //put config inside
-  String html = rootHtml;
-  html.replace("${ssid}", prefs.storage.ssid);
-  html.replace("${inNetName}", prefs.storage.inNetworkName);
-  html.replace("${humTrigger}", String(prefs.storage.humidityTrigger));
-  html.replace("${addHistoryInterval}", String(prefs.storage.secondsToStoreMeasurements));
+  String html = FPSTR(rootHtml);
   String labels, temps, hums;
   getHistoryData(60, labels, temps, hums);
   html.replace("${dataLabels}", labels);
   html.replace("${dataTemp}", temps);
   html.replace("${dataHum}", hums);
+  httpServer.send(200, "text/html", html);
+}
+
+static void handleSetup() {
+  if (checkAuth() == false) {
+    return;
+  }
+  String html = FPSTR(setupHtml);
+  html.replace("${ssid}", prefs.storage.ssid);
+  html.replace("${inNetName}", prefs.storage.inNetworkName);
+  html.replace("${humTrigger}", String(prefs.storage.humidityTrigger));
+  html.replace("${addHistoryInterval}", String(prefs.storage.secondsToStoreMeasurements));
+  html.replace("${muteFanOff}", String(prefs.storage.muteFanOff));
+  html.replace("${muteFanOn}", String(prefs.storage.muteFanOn));
   httpServer.send(200, "text/html", html);
 }
 
@@ -315,10 +350,6 @@ static void handleStatus() {
   String response;
   root.printTo(response);
   httpServer.send(200, "application/json", response);
-}
-
-MyServer::MyServer() {
-
 }
 
 void MyServer::switchToConfigMode() {
@@ -399,6 +430,7 @@ void MyServer::restart() {
   httpServer.on("/clearHistory", handleClearHistory);
   httpServer.on("/update", HTTP_POST, handleUpdate);
   httpServer.on("/version", HTTP_GET, handleVersion);
+  httpServer.on("/setup", HTTP_GET, handleSetup);
   httpServer.onNotFound(handleNotFound);
 
   httpServer.begin();

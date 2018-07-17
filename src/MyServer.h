@@ -38,7 +38,6 @@
 
 class MyServer {
   public:
-    MyServer();
     bool isServerConfigured();
 
     String getServerIp();

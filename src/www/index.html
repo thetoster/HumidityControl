@@ -47,60 +47,6 @@ R"(
         </form>
     </div>
 
-    <div class='container-fluid mb-4'>
-        <form class='card' method='POST'>
-            <div class='card-header alert alert-warning' role='alert'>
-              Konfiguracja
-            </div>
-            <div class='form-group'>
-                <label for='ssid'>Nazwa punktu dostępowego (SSID)</label>
-                <input type='text' class='form-control' id='ssid' name='ssid' aria-describedby='ssidHelp' placeholder='Podaj nazwę sieci' value='${ssid}'>
-                <small id='ssidHelp' class='form-text text-muted'>Po zapisaniu konfiguracji, czujnik będzie starał się połączyć do tej sieci.</small>
-            </div>
-            <div class='form-group'>
-                <label for='password'>Hasło do punktu dostępowego</label>
-                <input type='password' class='form-control' id='password' name='password' aria-describedby='passwordHelp' placeholder='Podaj hasło do sieci' >
-                <small id='passwordHelp' class='form-text text-muted'>To hasło będzie użyte podczas próby połączenia się do sieci o podanej nazwie (ssid).</small>
-            </div>
-            <div class='form-group'>
-                <label for='inNetName'>Nazwa czujnika</label>
-                <input type='text' class='form-control' id='inNetName' name='inNetName' aria-describedby='inNetNameHelp' placeholder='Nazwa czujnika w sieci' value='${inNetName}'>
-                <small id='inNetNameHelp' class='form-text text-muted'>Pod tą nazwą czujnik będzie się rozgłaszać w sieci za pomocą protokołu mDNS.</small>
-            </div>
-            <div class='form-group'>
-                <label for='humTrigger'>Dopuszczalna wilgotność</label>
-                <input type='number' class='form-control' id='humTrigger' name='humTrigger' aria-describedby='humTriggerHelp' placeholder='60' value='${humTrigger}'>
-                <small id='humTriggerHelp' class='form-text text-muted'>Wartość procentowa w przedziale 1-100%, po przekroczeniu tej wartości czujnik załączy wentylator.</small>
-            </div>
-            <div class='form-group'>
-                <label for='addHistoryInterval'>Interwał dodawania do historii</label>
-                <input type='number' class='form-control' id='addHistoryInterval' name='addHistoryInterval' aria-describedby='addHistoryIntervalHelp' placeholder='120' value='${addHistoryInterval}'>
-                <small id='addHistoryIntervalHelp' class='form-text text-muted'>Wartość podana w sekundach, określa co jaki czas kolejny pomiar zostanie dodany do historii.</small>
-            </div>
-            <div class='card-body'>
-            <button type='submit' class='btn btn-warning' formaction='/config'>Zapisz konfiguracje</button>
-            <button type='submit' class='btn btn-danger' formaction='/factoryReset'>Zresetuj do ustawień fabrycznych</button>
-            </div>
-        </form>
-    </div>
-
-    <div class='container-fluid mb-4'>
-        <form class='card' action='/update' method='POST'>
-            <div class='card-header alert alert-warning' role='alert'>
-              Aktualizacja
-            </div>
-            <div class='card-body'>
-            <div class='form-group'>
-                <label for='url'>URL do pliku z firmware.</label>
-                <input type='url' class='form-control' id='url' name='url' aria-describedby='urlHelp' placeholder='http://jakis.poprawny.url'>
-                <small id='urlHelp' class='form-text text-muted'>Proszę wskazać poprawny URL gdzie znajduje się nowy plik z firmware. Czujnik wczyta ten plik i wgra go do pamięci flash, po czym się zrestartuje.</small>
-            </div>
-            <button type='submit' class='btn btn-danger' formaction='/update'>Rozpocznij aktualizację</button>
-            </div>
-        </form>
-    </div>
-
-
 <script>
 var ctx = document.getElementById('myChart').getContext('2d');
 window.chartColors = {

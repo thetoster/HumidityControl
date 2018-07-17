@@ -13,6 +13,7 @@ Here is shourt summary of rest api. Each call requires authentication (see prope
 
 | URL suffix    | Method | description |
 | ------------- | ------ | ----------- |
+| /             | GET    | Request chart with history measurements, and allow manual turn on of fan. |
 | /config       | GET    | Get current node configuration in JSON format|
 | /config       | POST   | Configure node, field names are this same as returned by this same url with configuration |
 | /factoryReset | GET    | Request hard reset of node and switch to configuration mode|
@@ -20,11 +21,16 @@ Here is shourt summary of rest api. Each call requires authentication (see prope
 | /history      | GET    | Returns JSON encoded history of mesurements, in this same format as /status. It also contains ```now``` field which allows to put those measurements in time line |
 | /clearHistory | GET    | Wipeouts all historical readings. |
 | /run          | POST   | Enable fan relay for given amount of seconds, regardles of humidity reading. Single argument ```time``` is expected with runtime in seconds |
+| /setup        | GET    | Request configuration page. |
 | /update       | POST   | Starts firmware update, it accepts single agrument ```url``` which should point to new firmware image. |
 | /version      | GET    | To get current version of firmware. |
 
 ## Authentication.
 Currently HTTP Digest auth is used.
+
+## Hardware
+In folder hardware are all needed things to work with board and schematic. If you would like you can also use this: 
+(Board)[https://oshpark.com/shared_projects/PgFfqdfC]
 
 # Thanks goes to
 

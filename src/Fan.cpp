@@ -29,21 +29,48 @@
  OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
- Measurement.h
- Created on: Dec 29, 2017
+ Fan.cpp
+ Created on: Jul 17, 2018
  Author: Bartłomiej Żarnowski (Toster)
  */
-#ifndef Measurement_hpp
-#define Measurement_hpp
 
-#include <Arduino.h>
+#include "Fan.h"
+#include "Prefs.h"
 
-class __attribute__ ((packed)) Measurement {
-  public:
-    int32_t timestamp;
-    int8_t humidity;
-    int8_t temp;
-    Measurement(int32_t timestamp, int8_t humidity, int8_t temp);
-};
+Fan::Fan(uint8_t pin) : shouldRun(false), lastTurnOn(0), lastTurnOff(0), pin(pin), running(false) {
+  pinMode(pin, OUTPUT);
+  digitalWrite(pin, LOW);
+}
 
-#endif /* Measurement_hpp */
+void Fan::setFan(bool enabled) {
+	running = enabled;
+	Serial.println(enabled ? "Fan:ON" : "Fan:OFF");
+	digitalWrite(pin, enabled ? HIGH : LOW);
+}
+
+void Fan::update() {
+	if (shouldRun) {
+		if ((not running) && (not tooEarly(lastTurnOff, prefs.storage.muteFanOn))) {
+			lastTurnOn = millis();
+			setFan(true);
+		}
+
+	} else {
+		if (running && (not tooEarly(lastTurnOn, prefs.storage.muteFanOff))) {
+			lastTurnOff = millis();
+			setFan(false);
+		}
+	}
+}
+
+bool Fan::tooEarly(unsigned long timestamp, uint8_t sec) {
+	return millis() < (timestamp + 1000 * sec);
+}
+
+bool Fan::isRunning() const {
+	return running;
+}
+
+unsigned long Fan::getTurnOnFanMillis() const {
+	return running ? lastTurnOn : 0;
+}

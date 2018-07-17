@@ -38,7 +38,6 @@ void setup() {
     Serial.println("No prefs!");
   }
   Serial.flush();
-
 }
 
 void normalMode() {
@@ -48,7 +47,7 @@ void normalMode() {
   display.setColor(WHITE);
   display.setTextAlignment(TEXT_ALIGN_LEFT);
   display.setFont(ArialMT_Plain_16);
-  if (envLogic.isFanEnabled()) {
+  if (envLogic.isFanRunning()) {
     display.drawString(0, 0, envLogic.getDisplayFan());
   } else {
     //show network state

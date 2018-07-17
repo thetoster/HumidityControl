@@ -36,9 +36,10 @@
 #ifndef EnvLogic_hpp
 #define EnvLogic_hpp
 
+#include "Measurement.h"
+#include "Fan.h"
 #include <SHT21.h>
 #include <vector>
-#include "Measurement.h"
 
 class EnvLogic {
   public:
@@ -51,20 +52,22 @@ class EnvLogic {
     String getDisplayTemp();
     String getDisplayHum();
     String getDisplayFan();
-    bool isFanEnabled();
+    bool isFanRunning();
     void requestRunFor(int seconds);
   private:
+    const uint8_t FAN_CONTROL_PIN = 12;
+    const uint8_t UNUSED_CTRL_PIN = 13;
     SHT21 sht;
+    Fan fan{FAN_CONTROL_PIN};
     long requestedRunToMillis;
-    long turnOnFanMillis;
     long lastMeasurementMillis;
     long lastUpdate;
-    long autoFanOnSec;
-    bool lastMotorState;
 
     int getMaxAllowedHum();
     void addMeasurement(long mil);
-    void fanMotor(bool enabled);
+
+    bool isTooWet();
+    bool fanIsRequested();
 };
 
 extern EnvLogic envLogic;

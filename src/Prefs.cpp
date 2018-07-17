@@ -38,20 +38,6 @@
 
 Prefs prefs;
 
-Prefs::Prefs() {
-/*
-  defaultValues();
-
-  EEPROM.begin(512);
-  EEPROM.get(0, storage);
-  EEPROM.end();
-
-  if (storage.crc != calcCRC()) {
-    defaultValues();
-  }
-*/
-}
-
 void Prefs::load() {
   EEPROM.begin(512);
   EEPROM.get(0, storage);
@@ -91,6 +77,8 @@ void Prefs::defaultValues() {
   Serial.println("Reset prefs to default");
   storage.humidityTrigger = 60;
   storage.secondsToStoreMeasurements = 60;
+  storage.muteFanOn = 10;
+  storage.muteFanOff = 10;
   memset(&storage.ssid[0], 0, sizeof(storage.ssid));
   memset(&storage.password[0], 0, sizeof(storage.password));
   memset(&storage.inNetworkName[0], 0, sizeof(storage.inNetworkName));

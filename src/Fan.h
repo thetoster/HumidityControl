@@ -29,21 +29,32 @@
  OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
- Measurement.h
- Created on: Dec 29, 2017
+ Fan.h
+ Created on: Jul 17, 2018
  Author: Bartłomiej Żarnowski (Toster)
  */
-#ifndef Measurement_hpp
-#define Measurement_hpp
+
+#ifndef SRC_FAN_H_
+#define SRC_FAN_H_
 
 #include <Arduino.h>
 
-class __attribute__ ((packed)) Measurement {
-  public:
-    int32_t timestamp;
-    int8_t humidity;
-    int8_t temp;
-    Measurement(int32_t timestamp, int8_t humidity, int8_t temp);
+class Fan {
+public:
+	bool shouldRun;
+
+	Fan(uint8_t pin);
+	void update();
+	bool isRunning() const;
+	unsigned long getTurnOnFanMillis() const;
+private:
+	unsigned long lastTurnOn;
+	unsigned long lastTurnOff;
+	uint8_t pin;
+	bool running;
+
+	bool tooEarly(unsigned long timestamp, uint8_t sec);
+	void setFan(bool enabled);
 };
 
-#endif /* Measurement_hpp */
+#endif /* SRC_FAN_H_ */
