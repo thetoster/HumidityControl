@@ -36,7 +36,7 @@
 #include <EnvLogic.h>
 #include "Prefs.h"
 
-static constexpr int totalMeasurementMemoryLimit = 10 * 1024;
+static constexpr int totalMeasurementMemoryLimit = 4 * 1024;
 static constexpr long MIN_AUTO_TIME_SEC = 10;
 
 constexpr int FAN_CONTROL_PIN = 12;
