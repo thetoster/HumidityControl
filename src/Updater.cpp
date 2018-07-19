@@ -123,6 +123,7 @@ bool Updater::update() {
   lastMs = millis();
   delayTimer--;
   switch(screen) {
+  	default:
     case UpdaterScreen_FAILED:
       showFailedInfo();
       break;

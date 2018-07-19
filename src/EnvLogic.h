@@ -38,6 +38,7 @@
 
 #include "Measurement.h"
 #include "Fan.h"
+#include "Heuristic.h"
 #include <SHT21.h>
 #include <vector>
 
@@ -61,6 +62,7 @@ class EnvLogic {
     Fan fan{FAN_CONTROL_PIN};
     long requestedRunToMillis;
     long lastUpdate;
+    std::vector<Heuristic*> heuristics;
 
     int getMaxAllowedHum();
     void addMeasurement(long mil);
@@ -68,6 +70,7 @@ class EnvLogic {
     bool isTooWet();
     bool fanIsRequested();
     void collectMeasurementIfNeeded();
+    Heuristic* getSelectedHeuristic();
 };
 
 extern EnvLogic envLogic;

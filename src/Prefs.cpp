@@ -78,6 +78,14 @@ void Prefs::defaultValues() {
   storage.humidityTrigger = 60;
   storage.muteFanOn = 10;
   storage.muteFanOff = 10;
+
+  storage.selectedHeuristic = 0;
+  storage.useDisturber = 1;
+  storage.disturberTriggerTime = 10*60;
+  storage.noSamples = 15;
+  storage.timeToForget = 5 * 60;
+  storage.knownHumDiffTrigger = 6;
+
   memset(&storage.ssid[0], 0, sizeof(storage.ssid));
   memset(&storage.password[0], 0, sizeof(storage.password));
   memset(&storage.inNetworkName[0], 0, sizeof(storage.inNetworkName));

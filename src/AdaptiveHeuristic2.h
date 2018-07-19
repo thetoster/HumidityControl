@@ -29,47 +29,31 @@
  OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
- Prefs.h
- Created on: Dec 27, 2017
+ AdaptiveHeuristic2.h
+ Created on: Jul 19, 2018
  Author: Bartłomiej Żarnowski (Toster)
  */
-#ifndef Prefs_hpp
-#define Prefs_hpp
-#include <Arduino.h>
 
-struct SavedPrefs {
-    uint8_t crc;
-    char ssid[60];
-    char password[60];
-    char inNetworkName[20];
-    int8_t humidityTrigger;	//used by LimiterHeuristic and Disturber
+#ifndef SRC_ADAPTIVEHEURISTIC2_H_
+#define SRC_ADAPTIVEHEURISTIC2_H_
 
-    //Used by Fan
-    uint8_t muteFanOn;	//request to turn fan on will be ignored for this long after fan turn off
-    uint8_t muteFanOff; //request to turn fan off will be ignored for this long after fan turn on (minimal run time)
+#include "Heuristic.h"
+#include "Disturber.h"
+#include <vector>
 
-    //Heuristics data
-    uint8_t selectedHeuristic;
-    uint8_t useDisturber;	//0..1 as bool, used by AdaptiveHeuristic1/2 and NiceToHaveHeuristic
-    uint16_t disturberTriggerTime;	//in seconds, period on which disturber will run
-    uint8_t noSamples;	//used by AdaptiveHeuristic1/2
-    uint16_t timeToForget; //in seconds, used by NiceToHaveHeuristic
-    uint8_t knownHumDiffTrigger; //in % used by NiceToHaveHeuristic
-};
+class AdaptiveHeuristic2: public Heuristic {
+public:
+    AdaptiveHeuristic2(Fan &fan);
 
-class Prefs {
-  public:
-    SavedPrefs storage;
-
-    void save();
-    void defaultValues();
-    bool hasPrefs();
-    void load();
+    void update(int humidity) override;
   private:
-    uint8_t calcCRC();
+    double baseMean = 0;
+    double baseStdDev = 0;
+    std::vector<int8_t> samples;
+    Disturber disturber;
 
-    bool isZeroPrefs();
+    void calcMeanAndStdDev(double &mean, double &dev);
+    bool significantDiff(double dev, double stdDev);
 };
 
-extern Prefs prefs;
-#endif /* Prefs_hpp */
+#endif /* SRC_ADAPTIVEHEURISTIC2_H_ */

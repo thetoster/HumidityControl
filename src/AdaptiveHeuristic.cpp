@@ -29,47 +29,50 @@
  OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
- Prefs.h
- Created on: Dec 27, 2017
+ AdaptiveHeuristic.cpp
+ Created on: Jul 18, 2018
  Author: Bartłomiej Żarnowski (Toster)
  */
-#ifndef Prefs_hpp
-#define Prefs_hpp
-#include <Arduino.h>
 
-struct SavedPrefs {
-    uint8_t crc;
-    char ssid[60];
-    char password[60];
-    char inNetworkName[20];
-    int8_t humidityTrigger;	//used by LimiterHeuristic and Disturber
+#include "AdaptiveHeuristic.h"
+#include "Prefs.h"
+#include <numeric>
+#include <algorithm>
 
-    //Used by Fan
-    uint8_t muteFanOn;	//request to turn fan on will be ignored for this long after fan turn off
-    uint8_t muteFanOff; //request to turn fan off will be ignored for this long after fan turn on (minimal run time)
+AdaptiveHeuristic::AdaptiveHeuristic(Fan &fan) : Heuristic(fan), disturber(Disturber(fan)) {}
 
-    //Heuristics data
-    uint8_t selectedHeuristic;
-    uint8_t useDisturber;	//0..1 as bool, used by AdaptiveHeuristic1/2 and NiceToHaveHeuristic
-    uint16_t disturberTriggerTime;	//in seconds, period on which disturber will run
-    uint8_t noSamples;	//used by AdaptiveHeuristic1/2
-    uint16_t timeToForget; //in seconds, used by NiceToHaveHeuristic
-    uint8_t knownHumDiffTrigger; //in % used by NiceToHaveHeuristic
-};
+void AdaptiveHeuristic::update(int humidity) {
+  samples.push_back(humidity);
 
-class Prefs {
-  public:
-    SavedPrefs storage;
+  if (samples.size() == prefs.storage.noSamples) {
+    double mean, stdDev;
+    calcMeanAndStdDev(mean, stdDev);
 
-    void save();
-    void defaultValues();
-    bool hasPrefs();
-    void load();
-  private:
-    uint8_t calcCRC();
+    fan.shouldRun = significantMeanChange(mean, stdDev);
+    baseMean = mean;
+    baseStdDev = stdDev;
 
-    bool isZeroPrefs();
-};
+    samples.clear();
+  }
 
-extern Prefs prefs;
-#endif /* Prefs_hpp */
+  //random environment trigger changer
+  if (prefs.storage.useDisturber != 0) {
+  	disturber.update(humidity);
+  }
+}
+
+void AdaptiveHeuristic::calcMeanAndStdDev(double &mean, double &stdev) {
+  mean = std::accumulate(samples.begin(), samples.end(), 0.0) / samples.size();
+
+  double accum = 0.0;
+  for(auto i = samples.begin(); i != samples.end(); i++) {
+    accum += (*i - mean) * (*i - mean);
+  };
+
+  stdev = sqrt(accum / (samples.size()-1));
+}
+
+bool AdaptiveHeuristic::significantMeanChange(double mean, double stdDev) {
+  double ss = baseStdDev < 0.1 ? baseMean / 12 : baseStdDev;
+  return (abs(mean - baseMean) > 2 * ss);
+}

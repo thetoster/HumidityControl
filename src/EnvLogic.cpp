@@ -35,6 +35,10 @@
  */
 #include <EnvLogic.h>
 #include "Prefs.h"
+#include "AdaptiveHeuristic.h"
+#include "AdaptiveHeuristic2.h"
+#include "LimiterHeuristic.h"
+#include "NiceToHaveHeuristic.h"
 
 static constexpr int totalMeasurementMemoryLimit = 4 * 1024;
 
@@ -46,6 +50,11 @@ EnvLogic::EnvLogic() :
   pinMode(UNUSED_CTRL_PIN, OUTPUT);
   digitalWrite(UNUSED_CTRL_PIN, LOW);
   fan.shouldRun = false;
+
+  heuristics.push_back(new LimiterHeuristic(fan));
+  heuristics.push_back(new AdaptiveHeuristic(fan));
+  heuristics.push_back(new AdaptiveHeuristic2(fan));
+  heuristics.push_back(new NiceToHaveHeuristic(fan));
 }
 
 void EnvLogic::requestRunFor(int seconds) {
@@ -143,4 +152,12 @@ String millisToTime(long mil) {
     text += mil % 60;
   }
   return text;
+}
+
+Heuristic* EnvLogic::getSelectedHeuristic() {
+	int i = prefs.storage.selectedHeuristic;
+	if ((i >= (int)heuristics.size()) or (i < 0)) {
+		i = 0;
+	}
+	return heuristics[i];
 }
