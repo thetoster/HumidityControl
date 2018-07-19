@@ -43,7 +43,7 @@
 #include "Prefs.h"
 #include "Updater.h"
 
-const String versionString = "1.2.0";
+const String versionString = "1.3.0";
 
 static const char rootHtml[] PROGMEM =
   #include "www/index.html"
@@ -58,7 +58,9 @@ MyServer myServer;
 static const char* www_username = "Lampster";
 static const char* www_realm = "Authentication Failed, use login name:Lampster";
 
-static bool checkAuth() {
+namespace {
+
+bool checkAuth() {
   if (httpServer.authenticate(www_username, prefs.storage.password) == false) {
     httpServer.requestAuthentication(DIGEST_AUTH, www_realm);
     return false;
@@ -66,14 +68,14 @@ static bool checkAuth() {
   return true;
 }
 
-static void handleNotFound(){
+void handleNotFound(){
   if (checkAuth() == false) {
     return;
   }
   httpServer.send(404, "text/plain", "404: Not found");
 }
 
-static void handleClearHistory() {
+void handleClearHistory() {
   if (checkAuth() == false) {
     return;
   }
@@ -81,7 +83,7 @@ static void handleClearHistory() {
   httpServer.send(200, "text/plain", "200: OK");
 }
 
-static void handleFactoryConfig() {
+void handleFactoryConfig() {
   if (checkAuth() == false) {
     return;
   }
@@ -91,7 +93,7 @@ static void handleFactoryConfig() {
   myServer.switchToConfigMode();
 }
 
-static void handleVersion() {
+void handleVersion() {
   if (checkAuth() == false) {
     return;
   }
@@ -103,23 +105,36 @@ static void handleVersion() {
   httpServer.send(200, "application/json", response);
 }
 
-static void handleGetConfig() {
+void handleGetConfig() {
   if (checkAuth() == false) {
     return;
   }
   DynamicJsonBuffer  jsonBuffer;
   JsonObject& root = jsonBuffer.createObject();
+
+  //Network
   root["ssid"] = prefs.storage.ssid;
-  root["humTrigger"] = prefs.storage.humidityTrigger;
-  root["inNetName"] = prefs.storage.inNetworkName;
+  root["inNetworkName"] = prefs.storage.inNetworkName;
+
+  //fan
   root["muteFanOn"] = prefs.storage.muteFanOn;
   root["muteFanOff"] = prefs.storage.muteFanOff;
+
+  //heuristic
+  root["selectedHeuristic"] = prefs.storage.selectedHeuristic;
+  root["useDisturber"] = prefs.storage.useDisturber;
+  root["disturberTriggerTime"] = prefs.storage.disturberTriggerTime;
+  root["noSamples"] = prefs.storage.noSamples;
+  root["timeToForget"] = prefs.storage.timeToForget;
+  root["knownHumDiffTrigger"] = prefs.storage.knownHumDiffTrigger;
+  root["humidityTrigger"] = prefs.storage.humidityTrigger;
+
   String response;
   root.printTo(response);
   httpServer.send(200, "application/json", response);
 }
 
-static String getStringArg(String argName, int maxLen, bool* isError) {
+String getStringArg(String argName, int maxLen, bool* isError) {
   String result = "";
   *isError = false;
   if (httpServer.hasArg(argName)) {
@@ -133,7 +148,7 @@ static String getStringArg(String argName, int maxLen, bool* isError) {
   return result;
 }
 
-static int getIntArg(String argName, int maxValue, bool* isError) {
+int getIntArg(String argName, int maxValue, bool* isError) {
   int result = -1;
   *isError = false;
   if (httpServer.hasArg(argName)) {
@@ -147,77 +162,139 @@ static int getIntArg(String argName, int maxValue, bool* isError) {
   return result;
 }
 
-static void handleSetConfig() {
+bool emplaceChars(char* ptr, String argName, int maxLen) {
+	bool fail;
+	String tmp = getStringArg(argName, maxLen, &fail);
+	if (not fail) {
+		strncpy(ptr, tmp.c_str(), maxLen);
+	}
+	return fail;
+}
+
+bool handleNetworkConfig(SavedPrefs& p) {
+	bool fail = false;
+
+  fail |= emplaceChars(p.ssid, "ssid", sizeof(p.ssid));
+  fail |= emplaceChars(p.password, "password", sizeof(p.password));
+  fail |= emplaceChars(p.inNetworkName, "inNetworkName", sizeof(p.inNetworkName));
+
+  return fail;
+}
+
+bool handleFanConfig(SavedPrefs& p) {
+	bool fail = true;
+
+  p.muteFanOn = getIntArg("muteFanOn", 255, &fail);
+  if (not fail) {
+  	p.muteFanOff = getIntArg("muteFanOff", 255, &fail);
+  }
+
+  return fail;
+}
+
+bool handleHeuristicConfig(SavedPrefs& p) {
+	bool fail = true;
+
+  p.humidityTrigger = getIntArg("humidityTrigger", 100, &fail);
+  if (not fail) {
+  	p.selectedHeuristic = getIntArg("selectedHeuristic", 255, &fail);
+  }
+  if (not fail) {
+		p.useDisturber = getIntArg("useDisturber", 255, &fail) != 0 ? true : false;
+	}
+  if (not fail) {
+		p.disturberTriggerTime = getIntArg("disturberTriggerTime", 65535, &fail);
+	}
+  if (not fail) {
+		p.noSamples = getIntArg("noSamples", 120, &fail);
+	}
+  if (not fail) {
+		p.timeToForget = getIntArg("timeToForget", 65535, &fail);
+	}
+  if (not fail) {
+		p.knownHumDiffTrigger = getIntArg("knownHumDiffTrigger", 100, &fail);
+	}
+
+  return fail;
+}
+
+void applyNetConfig(SavedPrefs& p, bool& changed) {
+
+  if ((strncmp(prefs.storage.inNetworkName, p.inNetworkName, sizeof(p.inNetworkName)) != 0)
+  		&& (strnlen(p.inNetworkName, sizeof(p.inNetworkName)) > 0)) {
+    strncpy(prefs.storage.inNetworkName, p.inNetworkName, sizeof(prefs.storage.inNetworkName));
+    changed = true;
+  }
+  if ((strncmp(prefs.storage.password, p.password, sizeof(prefs.storage.password)) != 0)
+  	&& (strnlen(p.password, sizeof(p.password)) > 0)) {
+    strncpy(prefs.storage.password, p.password, sizeof(prefs.storage.password));
+    changed = true;
+  }
+  if ((strncmp(prefs.storage.ssid, p.ssid, sizeof(prefs.storage.ssid)) != 0)
+  		&& (strnlen(p.ssid, sizeof(p.ssid)) > 0)) {
+    strncpy(prefs.storage.ssid, p.ssid, sizeof(prefs.storage.ssid));
+    changed = true;
+  }
+}
+
+template<typename T>
+void applyIfChanged(T& from, T& to, bool& changed) {
+	if (from != to) {
+		to = from;
+		changed = true;
+	}
+}
+
+void applyFanConfig(SavedPrefs& p, bool& changed) {
+	applyIfChanged(p.muteFanOn, prefs.storage.muteFanOn, changed);
+	applyIfChanged(p.muteFanOff, prefs.storage.muteFanOff, changed);
+}
+
+void applyHeuristicConfig(SavedPrefs& p, bool& changed) {
+	applyIfChanged(p.humidityTrigger, prefs.storage.humidityTrigger, changed);
+	applyIfChanged(p.selectedHeuristic, prefs.storage.selectedHeuristic, changed);
+	applyIfChanged(p.useDisturber, prefs.storage.useDisturber, changed);
+	applyIfChanged(p.disturberTriggerTime, prefs.storage.disturberTriggerTime, changed);
+	applyIfChanged(p.noSamples, prefs.storage.noSamples, changed);
+	applyIfChanged(p.timeToForget, prefs.storage.timeToForget, changed);
+	applyIfChanged(p.knownHumDiffTrigger, prefs.storage.knownHumDiffTrigger, changed);
+}
+
+bool applyPrefsChange(SavedPrefs& p, bool& restartNetwork) {
+	applyNetConfig(p, restartNetwork);
+
+	bool changed = false;
+	applyFanConfig(p, changed);
+	applyHeuristicConfig(p, changed);
+
+  return changed | restartNetwork;
+}
+
+void handleSetConfig() {
   if (checkAuth() == false) {
     return;
   }
-  bool fail;
-  String ssid = getStringArg("ssid", sizeof(prefs.storage.ssid), &fail);
-  if (fail == true) {
-    return;
-  }
 
-  String pass = getStringArg("password", sizeof(prefs.storage.password), &fail);
-  if (fail == true) {
-    return;
-  }
+  SavedPrefs p = {0};
 
-  String name = getStringArg("inNetName", sizeof(prefs.storage.inNetworkName), &fail);
-  if (fail == true) {
-    return;
-  }
+  bool fail = handleNetworkConfig(p);
+  fail |= handleFanConfig(p);
+  fail |= handleHeuristicConfig(p);
 
-  int humTrig = getIntArg("humTrigger", 100, &fail);
-  if (fail == true) {
-    return;
-  }
-
-  int muteFanOn = getIntArg("muteFanOn", 255, &fail);
-  if (fail == true) {
-    return;
-  }
-
-  int muteFanOff = getIntArg("muteFanOff", 255, &fail);
-  if (fail == true) {
+  if (fail) {
     return;
   }
 
   //now apply new values
-  bool changed = false;
   bool restartNetwork = false;
-  if (humTrig > 0) {
-    prefs.storage.humidityTrigger = humTrig;
-    changed = true;
-  }
-  if (muteFanOn > 0) {
-    prefs.storage.muteFanOn = muteFanOn;
-    changed = true;
-  }
-  if (muteFanOff > 0) {
-    prefs.storage.muteFanOff = muteFanOff;
-    changed = true;
-  }
-  if (name.length() > 0) {
-    strncpy(prefs.storage.inNetworkName, name.c_str(), sizeof(prefs.storage.inNetworkName));
-    changed = true;
-    restartNetwork = true;
-  }
-  if (pass.length() > 0) {
-    strncpy(prefs.storage.password, pass.c_str(), sizeof(prefs.storage.password));
-    changed = true;
-    restartNetwork = true;
-  }
-  if (ssid.length() > 0) {
-    strncpy(prefs.storage.ssid, ssid.c_str(), sizeof(prefs.storage.ssid));
-    changed = true;
-    restartNetwork = true;
-  }
+  bool changed = applyPrefsChange(p, restartNetwork);
+
   String result = "200: OK";
   if (changed) {
     prefs.save();
     result += ", Config Saved";
   }
-  //httpServer.send(200, "text/plain", "200: OK");
+
   delay(200);
   if (restartNetwork) {
     result += ", Network restarted";
@@ -228,7 +305,7 @@ static void handleSetConfig() {
   }
 }
 
-static void handleRun() {
+void handleRun() {
   if (checkAuth() == false) {
     return;
   }
@@ -242,7 +319,7 @@ static void handleRun() {
   }
 }
 
-static void getHistoryData(int count, String& labelData, String &tempData, String& humData) {
+void getHistoryData(int count, String& labelData, String &tempData, String& humData) {
   labelData = "";
   tempData = "";
   humData = "";
@@ -265,10 +342,12 @@ static void getHistoryData(int count, String& labelData, String &tempData, Strin
   humData.remove(labelData.length() - 1);
 }
 
-static void handleRoot() {
+void handleRoot() {
+	Serial.println("root");
   if (checkAuth() == false) {
     return;
   }
+  Serial.println("root>>");
   //put config inside
   String html = FPSTR(rootHtml);
   String labels, temps, hums;
@@ -277,22 +356,40 @@ static void handleRoot() {
   html.replace("${dataTemp}", temps);
   html.replace("${dataHum}", hums);
   httpServer.send(200, "text/html", html);
+  Serial.println("root!end");
 }
 
-static void handleSetup() {
+void handleSetup() {
   if (checkAuth() == false) {
     return;
   }
   String html = FPSTR(setupHtml);
+
+  //network
   html.replace("${ssid}", prefs.storage.ssid);
-  html.replace("${inNetName}", prefs.storage.inNetworkName);
-  html.replace("${humTrigger}", String(prefs.storage.humidityTrigger));
+  html.replace("${inNetworkName}", prefs.storage.inNetworkName);
+
+  //fan
   html.replace("${muteFanOff}", String(prefs.storage.muteFanOff));
   html.replace("${muteFanOn}", String(prefs.storage.muteFanOn));
+
+  //heuristic
+  html.replace("${humidityTrigger}", String(prefs.storage.humidityTrigger));
+  html.replace("${disturberTriggerTime}", String(prefs.storage.disturberTriggerTime));
+  html.replace("${noSamples}", String(prefs.storage.noSamples));
+  html.replace("${timeToForget}", String(prefs.storage.timeToForget));
+  html.replace("${knownHumDiffTrigger}", String(prefs.storage.knownHumDiffTrigger));
+  //checkbox values
+  html.replace("${useDisturber_defVal}", prefs.storage.useDisturber != 0 ? "checked":" ");
+  String heur("heur");
+  heur += prefs.storage.selectedHeuristic;
+  html.replace("${selectedHeuristic}", heur);
+
+
   httpServer.send(200, "text/html", html);
 }
 
-static void handleUpdate() {
+void handleUpdate() {
   if (checkAuth() == false) {
     return;
   }
@@ -307,7 +404,7 @@ static void handleUpdate() {
   }
 }
 
-static void handleHistory() {
+void handleHistory() {
   if (checkAuth() == false) {
     return;
   }
@@ -327,7 +424,7 @@ static void handleHistory() {
   httpServer.send(200, "application/json", response);
 }
 
-static void handleStatus() {
+void handleStatus() {
   if (checkAuth() == false) {
     return;
   }
@@ -339,6 +436,8 @@ static void handleStatus() {
   String response;
   root.printTo(response);
   httpServer.send(200, "application/json", response);
+}
+
 }
 
 void MyServer::switchToConfigMode() {
@@ -423,6 +522,7 @@ void MyServer::restart() {
   httpServer.onNotFound(handleNotFound);
 
   httpServer.begin();
+  MDNS.notifyAPChange();
   MDNS.begin(prefs.storage.inNetworkName);
   MDNS.addService("http", "tcp", 80);
 }

@@ -7,7 +7,7 @@ R"(
         <meta http-equiv='Content-Language' content='pl'  />
         <meta name='viewport' content='width=device-width, initial-scale=1, shrink-to-fit=no'>
  
-        <title>Strona główna czujnika</title>
+        <title>Konfiguracja</title>
 
         <link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/css/bootstrap.min.css' integrity='sha384-Zug+QiDoJOrZ5t4lssLdxGhVrurbmBWopoEl+M6BdEfwnCJZtKxi1KgxUyJq13dy' crossorigin='anonymous'>
     </head>
@@ -17,51 +17,115 @@ R"(
     <script src='https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/js/bootstrap.min.js' integrity='sha384-a5N7Y/aK3qNeh15eJKGWxsqtnX/wWdSZSKp+81YjTmS15nvnvxKHuzaWwXHDli+4' crossorigin='anonymous'></script>
     <script src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js'></script>
     
-    <div class='container-fluid mb-4'>
-        <form class='card' method='POST'>
-            <div class='card-header alert alert-warning' role='alert'>
-              Konfiguracja
-            </div>
-            <div class='form-group'>
-                <label for='ssid'>Nazwa punktu dostępowego (SSID)</label>
-                <input type='text' class='form-control' id='ssid' name='ssid' aria-describedby='ssidHelp' placeholder='Podaj nazwę sieci' value='${ssid}'>
-                <small id='ssidHelp' class='form-text text-muted'>Po zapisaniu konfiguracji, czujnik będzie starał się połączyć do tej sieci.</small>
-            </div>
-            <div class='form-group'>
-                <label for='password'>Hasło do punktu dostępowego</label>
-                <input type='password' class='form-control' id='password' name='password' aria-describedby='passwordHelp' placeholder='Podaj hasło do sieci' >
-                <small id='passwordHelp' class='form-text text-muted'>To hasło będzie użyte podczas próby połączenia się do sieci o podanej nazwie (ssid).</small>
-            </div>
-            <div class='form-group'>
-                <label for='inNetName'>Nazwa czujnika</label>
-                <input type='text' class='form-control' id='inNetName' name='inNetName' aria-describedby='inNetNameHelp' placeholder='Nazwa czujnika w sieci' value='${inNetName}'>
-                <small id='inNetNameHelp' class='form-text text-muted'>Pod tą nazwą czujnik będzie się rozgłaszać w sieci za pomocą protokołu mDNS.</small>
-            </div>
-            <div class='form-group'>
-                <label for='humTrigger'>Dopuszczalna wilgotność</label>
-                <input type='number' class='form-control' id='humTrigger' name='humTrigger' aria-describedby='humTriggerHelp' placeholder='60' value='${humTrigger}'>
-                <small id='humTriggerHelp' class='form-text text-muted'>Wartość procentowa w przedziale 1-100%, po przekroczeniu tej wartości czujnik załączy wentylator.</small>
-            </div>
-            <div class='form-group'>
-                <label for='muteFanOn'>Czas odczekania do kolejnego uruchomienia wiatraka</label>
-                <input type='number' class='form-control' id='muteFanOn' name='muteFanOn' aria-describedby='muteFanOnHelp' placeholder='10' value='${muteFanOn}'>
-                <small id='muteFanOnHelp' class='form-text text-muted'>Wartość podana w sekundach. Tyle sekund musi upłynąć zanim wiatrak ponownie będzie można włączyć (od momentu wyłączenia).</small>
-            </div>            
-            <div class='form-group'>
-                <label for='muteFanOff'>Interwał dodawania do historii</label>
-                <input type='number' class='form-control' id='muteFanOff' name='muteFanOff' aria-describedby='muteFanOffHelp' placeholder='10' value='${muteFanOff}'>
-                <small id='muteFanOffHelp' class='form-text text-muted'>Wartość podana w sekundach, określa minimalny czas włączenia wiatraka.</small>
-            </div>
-            <div class='card-body'>
-            <button type='submit' class='btn btn-warning' formaction='/config'>Zapisz konfiguracje</button>
-            <button type='submit' class='btn btn-danger' formaction='/factoryReset'>Zresetuj do ustawień fabrycznych</button>
-            </div>
+    <div class='container mb-4'>
+        <form method='POST'>
+            <div class='card'>
+	            <div class='card-header alert alert-success' role='alert'>
+	              Konfiguracja sieci
+	            </div>
+	            <div class='form-group'>
+	                <label for='ssid'>Nazwa punktu dostępowego (SSID)</label>
+	                <input type='text' class='form-control' id='ssid' name='ssid' aria-describedby='ssidHelp' placeholder='Podaj nazwę sieci' value='${ssid}'>
+	                <small id='ssidHelp' class='form-text text-muted'>Po zapisaniu konfiguracji, czujnik będzie starał się połączyć do tej sieci.</small>
+	            </div>
+	            <div class='form-group'>
+	                <label for='password'>Hasło do punktu dostępowego</label>
+	                <input type='password' class='form-control' id='password' name='password' aria-describedby='passwordHelp' placeholder='Podaj hasło do sieci' >
+	                <small id='passwordHelp' class='form-text text-muted'>To hasło będzie użyte podczas próby połączenia się do sieci o podanej nazwie (ssid).</small>
+	            </div>
+	            <div class='form-group'>
+	                <label for='inNetworkName'>Nazwa czujnika</label>
+	                <input type='text' class='form-control' id='inNetworkName' name='inNetworkName' aria-describedby='inNetworkNameHelp' placeholder='Nazwa czujnika w sieci' value='${inNetworkName}'>
+	                <small id='inNetworkNameHelp' class='form-text text-muted'>Pod tą nazwą czujnik będzie się rozgłaszać w sieci za pomocą protokołu mDNS.</small>
+	            </div>
+	         </div>
+	         <div class='card'>
+	         	<div class='card-header alert alert-success' role='alert'>
+	              Konfiguracja Wiatraka
+	            </div>
+	            <div class='form-group'>
+	                <label for='muteFanOn'>Czas odczekania do kolejnego uruchomienia wiatraka</label>
+	                <input type='number' class='form-control' id='muteFanOn' name='muteFanOn' aria-describedby='muteFanOnHelp' placeholder='10' value='${muteFanOn}'>
+	                <small id='muteFanOnHelp' class='form-text text-muted'>Wartość podana w sekundach. Tyle sekund musi upłynąć zanim wiatrak ponownie będzie można włączyć (od momentu wyłączenia).</small>
+	            </div>            
+	            <div class='form-group'>
+	                <label for='muteFanOff'>Minimalny czas działania</label>
+	                <input type='number' class='form-control' id='muteFanOff' name='muteFanOff' aria-describedby='muteFanOffHelp' placeholder='10' value='${muteFanOff}'>
+	                <small id='muteFanOffHelp' class='form-text text-muted'>Wartość podana w sekundach, określa minimalny czas włączenia wiatraka.</small>
+	            </div>
+	         </div>
+	         <div class='card'>
+	         	<div class='card-header alert alert-success' role='alert'>
+	              Konfiguracja zbierania danych
+	            </div>
+	            
+	            <div class='form-group'>	
+                 <label for='addHistoryInterval'>Interwał dodawania do historii</label>	
+                 <input type='number' class='form-control' id='addHistoryInterval' name='addHistoryInterval' aria-describedby='addHistoryIntervalHelp' placeholder='120' value='${addHistoryInterval}'>	
+                 <small id='addHistoryIntervalHelp' class='form-text text-muted'>Wartość podana w sekundach, określa co jaki czas kolejny pomiar zostanie dodany do historii.</small>	
+                </div>
+	         </div>
+	         <div class='card'>
+	         	<div class='card-header alert alert-success' role='alert'>
+	              Heurystyka
+	            </div>
+				<div class="btn-group btn-group-toggle" data-toggle="buttons">
+			  		<label class="btn btn-secondary active">
+			    		<input type="radio" name="selectedHeuristic" value="0" id="heur0" autocomplete="off"> Graniczna
+			  		</label>
+			  		<label class="btn btn-secondary">
+			    		<input type="radio" name="selectedHeuristic" value="1" id="heur1" autocomplete="off"> Adaptywna-1
+			  		</label>
+			  		<label class="btn btn-secondary">
+			    		<input type="radio" name="selectedHeuristic" value="2" id="heur2" autocomplete="off"> Adaptywna-2
+			  		</label>
+			  		<label class="btn btn-secondary">
+			    		<input type="radio" name="selectedHeuristic" value="3" id="heur3" autocomplete="off"> Zbieżna
+			  		</label>
+				</div>
+	            <div class='form-group'>
+	                <label for='humidityTrigger'>Dopuszczalna wilgotność</label>
+	                <input type='number' class='form-control' id='humidityTrigger' name='humidityTrigger' aria-describedby='humidityTriggerHelp' placeholder='60' value='${humidityTrigger}'>
+	                <small id='humidityTriggerHelp' class='form-text text-muted'>Wartość procentowa w przedziale 1-100%, po przekroczeniu tej wartości czujnik załączy wentylator (Graniczna).</small>
+	            </div>
+	            <div class='form-group'>
+	                <label for='noSamples'>Liczba próbek</label>
+	                <input type='number' class='form-control' id='noSamples' name='noSamples' aria-describedby='noSamplesHelp' placeholder='15' value='${noSamples}'>
+	                <small id='noSamplesHelp' class='form-text text-muted'>Liczba próbek do zebrania zanim zadziała heurystyke (Adaptywna-1, Adaptywna-2).</small>
+	            </div>
+	            <div class='form-group'>
+	                <label for='timeToForget'>Czas do porzucenia minimalnej wartości</label>
+	                <input type='number' class='form-control' id='timeToForget' name='timeToForget' aria-describedby='timeToForgetHelp' placeholder='300' value='${timeToForget}'>
+	                <small id='timeToForgetHelp' class='form-text text-muted'>W sekundach, po tym czasie zostanie nadpisana minimalna znana wartość wilgotności (Zbieżna).</small>
+	            </div>
+	            <div class='form-group'>
+	                <label for='knownHumDiffTrigger'>Minimalna zmiana wilgotności do aktywacji</label>
+	                <input type='number' class='form-control' id='knownHumDiffTrigger' name='knownHumDiffTrigger' aria-describedby='knownHumDiffTriggerHelp' placeholder='6' value='${knownHumDiffTrigger}'>
+	                <small id='knownHumDiffTriggerHelp' class='form-text text-muted'>O ile musi zmienić się wilgotność względem minimalnej znanej aby uruchomić wiatrak (Zbieżna).</small>
+	            </div>
+	            <div class="form-group form-check">
+				    <input type="checkbox" class="form-check-input" name="useDisturber" id="useDisturber" value="1" ${useDisturber_defVal}>
+				    <label class="form-check-label" for="useDisturber" aria-describedby='useDisturberHelp'>Aktywuj wzbudzacz</label>
+				    <small id='useDisturberHelp' class='form-text text-muted'> (Adaptywna-1, Adaptywna-2, Zbieżna)</small>
+				</div>
+	            <div class='form-group'>
+	                <label for='disturberTriggerTime'>Czas bezczynności do załączenia wzbudzacza</label>
+	                <input type='number' class='form-control' id='disturberTriggerTime' name='disturberTriggerTime' aria-describedby='disturberTriggerTimeHelp' placeholder='600' value='${disturberTriggerTime}'>
+	                <small id='disturberTriggerTimeHelp' class='form-text text-muted'>W sekundach, po tym czasie nastąpi chwilowe włącznie wiatraka aby sprawdzić czy da się obniżyć wilgotność (Adaptywna-1, Adaptywna-2, Zbieżna).</small>
+	            </div>
+             </div> 
+	         
+	         <div class='card-body'>
+	            <button type='submit' class='btn btn-warning' formaction='/config'>Zapisz konfiguracje</button>
+	            <button type='submit' class='btn btn-danger' formaction='/factoryReset'>Zresetuj do ustawień fabrycznych</button>
+	         </div>
+	         
         </form>
     </div>
 
-    <div class='container-fluid mb-4'>
+    <div class='container mb-4'>
         <form class='card' action='/update' method='POST'>
-            <div class='card-header alert alert-warning' role='alert'>
+            <div class='card-header alert alert-danger' role='alert'>
               Aktualizacja
             </div>
             <div class='card-body'>
@@ -74,6 +138,9 @@ R"(
             </div>
         </form>
     </div>
+    <script>
+    	document.getElementById("${selectedHeuristic}").click();
+    </script>
 </body>
 </html>
 )"

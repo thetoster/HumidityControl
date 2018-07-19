@@ -39,10 +39,11 @@
 
 struct SavedPrefs {
     uint8_t crc;
+
+    //Used by net manager
     char ssid[60];
     char password[60];
     char inNetworkName[20];
-    int8_t humidityTrigger;	//used by LimiterHeuristic and Disturber
 
     //Used by Fan
     uint8_t muteFanOn;	//request to turn fan on will be ignored for this long after fan turn off
@@ -55,6 +56,7 @@ struct SavedPrefs {
     uint8_t noSamples;	//used by AdaptiveHeuristic1/2
     uint16_t timeToForget; //in seconds, used by NiceToHaveHeuristic
     uint8_t knownHumDiffTrigger; //in % used by NiceToHaveHeuristic
+    int8_t humidityTrigger;	//used by LimiterHeuristic and Disturber
 };
 
 class Prefs {

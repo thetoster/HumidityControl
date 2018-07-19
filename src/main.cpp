@@ -30,6 +30,8 @@ void setup() {
 
   //dump prefs
   if (prefs.hasPrefs()) {
+  	Serial.print("SSID:");
+  	Serial.println(prefs.storage.ssid);
     Serial.print("In Net Name:");
     Serial.println(prefs.storage.inNetworkName);
     Serial.print("Password:");
