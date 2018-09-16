@@ -43,7 +43,7 @@
 #include "Prefs.h"
 #include "Updater.h"
 
-const String versionString = "1.3.0";
+const String versionString = "1.3.1";
 
 static const char rootHtml[] PROGMEM =
   #include "www/index.html"

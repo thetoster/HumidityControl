@@ -9,6 +9,8 @@
 #include "Prefs.h"
 #include "Buttons.h"
 
+#define TIME_TO_RESET (1000 * 24 * 3600)
+
 SSD1306  display(0x3c, 5, 4);
 
 void setup() {
@@ -75,7 +77,15 @@ void configMode() {
   delay(200);
 }
 
+void periodicResetHandler() {
+  if (millis() > TIME_TO_RESET) {
+    ESP.restart();
+  }
+}
+
 void loop() {
+  periodicResetHandler();
+
   //updater has it's own display management
   if (updater.update()) {
     return;
