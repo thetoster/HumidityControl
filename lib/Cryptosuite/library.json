@@ -1,0 +1,15 @@
+{
+  "name": "Cryptosuite",
+  "keywords": "sha, sha1, sha256, hmac",
+  "description": "Cryptographic suite for Arduino (SHA-1, SHA-256, HMAC-SHA-1 and HMAC-SHA-256)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Cathedrow/Cryptosuite.git"
+  },
+  "export": {
+    "include": "Sha"
+  },
+  "version": "1.0.0",
+  "frameworks": "arduino",
+  "platforms": "*"
+}

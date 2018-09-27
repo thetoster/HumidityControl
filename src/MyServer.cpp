@@ -163,16 +163,16 @@ int getIntArg(String argName, int maxValue, bool* isError) {
 }
 
 bool emplaceChars(char* ptr, String argName, int maxLen) {
-	bool fail;
-	String tmp = getStringArg(argName, maxLen, &fail);
-	if (not fail) {
-		strncpy(ptr, tmp.c_str(), maxLen);
-	}
-	return fail;
+  bool fail;
+  String tmp = getStringArg(argName, maxLen, &fail);
+  if (not fail) {
+    strncpy(ptr, tmp.c_str(), maxLen);
+  }
+  return fail;
 }
 
 bool handleNetworkConfig(SavedPrefs& p) {
-	bool fail = false;
+  bool fail = false;
 
   fail |= emplaceChars(p.ssid, "ssid", sizeof(p.ssid));
   fail |= emplaceChars(p.password, "password", sizeof(p.password));
@@ -182,38 +182,38 @@ bool handleNetworkConfig(SavedPrefs& p) {
 }
 
 bool handleFanConfig(SavedPrefs& p) {
-	bool fail = true;
+  bool fail = true;
 
   p.muteFanOn = getIntArg("muteFanOn", 255, &fail);
   if (not fail) {
-  	p.muteFanOff = getIntArg("muteFanOff", 255, &fail);
+    p.muteFanOff = getIntArg("muteFanOff", 255, &fail);
   }
 
   return fail;
 }
 
 bool handleHeuristicConfig(SavedPrefs& p) {
-	bool fail = true;
+  bool fail = true;
 
   p.humidityTrigger = getIntArg("humidityTrigger", 100, &fail);
   if (not fail) {
-  	p.selectedHeuristic = getIntArg("selectedHeuristic", 255, &fail);
+    p.selectedHeuristic = getIntArg("selectedHeuristic", 255, &fail);
   }
   if (not fail) {
-		p.useDisturber = getIntArg("useDisturber", 255, &fail) != 0 ? true : false;
-	}
+    p.useDisturber = getIntArg("useDisturber", 255, &fail) != 0 ? true : false;
+  }
   if (not fail) {
-		p.disturberTriggerTime = getIntArg("disturberTriggerTime", 65535, &fail);
-	}
+    p.disturberTriggerTime = getIntArg("disturberTriggerTime", 65535, &fail);
+  }
   if (not fail) {
-		p.noSamples = getIntArg("noSamples", 120, &fail);
-	}
+    p.noSamples = getIntArg("noSamples", 120, &fail);
+  }
   if (not fail) {
-		p.timeToForget = getIntArg("timeToForget", 65535, &fail);
-	}
+    p.timeToForget = getIntArg("timeToForget", 65535, &fail);
+  }
   if (not fail) {
-		p.knownHumDiffTrigger = getIntArg("knownHumDiffTrigger", 100, &fail);
-	}
+    p.knownHumDiffTrigger = getIntArg("knownHumDiffTrigger", 100, &fail);
+  }
 
   return fail;
 }
@@ -221,17 +221,17 @@ bool handleHeuristicConfig(SavedPrefs& p) {
 void applyNetConfig(SavedPrefs& p, bool& changed) {
 
   if ((strncmp(prefs.storage.inNetworkName, p.inNetworkName, sizeof(p.inNetworkName)) != 0)
-  		&& (strnlen(p.inNetworkName, sizeof(p.inNetworkName)) > 0)) {
+      && (strnlen(p.inNetworkName, sizeof(p.inNetworkName)) > 0)) {
     strncpy(prefs.storage.inNetworkName, p.inNetworkName, sizeof(prefs.storage.inNetworkName));
     changed = true;
   }
   if ((strncmp(prefs.storage.password, p.password, sizeof(prefs.storage.password)) != 0)
-  	&& (strnlen(p.password, sizeof(p.password)) > 0)) {
+      && (strnlen(p.password, sizeof(p.password)) > 0)) {
     strncpy(prefs.storage.password, p.password, sizeof(prefs.storage.password));
     changed = true;
   }
   if ((strncmp(prefs.storage.ssid, p.ssid, sizeof(prefs.storage.ssid)) != 0)
-  		&& (strnlen(p.ssid, sizeof(p.ssid)) > 0)) {
+      && (strnlen(p.ssid, sizeof(p.ssid)) > 0)) {
     strncpy(prefs.storage.ssid, p.ssid, sizeof(prefs.storage.ssid));
     changed = true;
   }
@@ -239,33 +239,33 @@ void applyNetConfig(SavedPrefs& p, bool& changed) {
 
 template<typename T>
 void applyIfChanged(T& from, T& to, bool& changed) {
-	if (from != to) {
-		to = from;
-		changed = true;
-	}
+  if (from != to) {
+    to = from;
+    changed = true;
+  }
 }
 
 void applyFanConfig(SavedPrefs& p, bool& changed) {
-	applyIfChanged(p.muteFanOn, prefs.storage.muteFanOn, changed);
-	applyIfChanged(p.muteFanOff, prefs.storage.muteFanOff, changed);
+  applyIfChanged(p.muteFanOn, prefs.storage.muteFanOn, changed);
+  applyIfChanged(p.muteFanOff, prefs.storage.muteFanOff, changed);
 }
 
 void applyHeuristicConfig(SavedPrefs& p, bool& changed) {
-	applyIfChanged(p.humidityTrigger, prefs.storage.humidityTrigger, changed);
-	applyIfChanged(p.selectedHeuristic, prefs.storage.selectedHeuristic, changed);
-	applyIfChanged(p.useDisturber, prefs.storage.useDisturber, changed);
-	applyIfChanged(p.disturberTriggerTime, prefs.storage.disturberTriggerTime, changed);
-	applyIfChanged(p.noSamples, prefs.storage.noSamples, changed);
-	applyIfChanged(p.timeToForget, prefs.storage.timeToForget, changed);
-	applyIfChanged(p.knownHumDiffTrigger, prefs.storage.knownHumDiffTrigger, changed);
+  applyIfChanged(p.humidityTrigger, prefs.storage.humidityTrigger, changed);
+  applyIfChanged(p.selectedHeuristic, prefs.storage.selectedHeuristic, changed);
+  applyIfChanged(p.useDisturber, prefs.storage.useDisturber, changed);
+  applyIfChanged(p.disturberTriggerTime, prefs.storage.disturberTriggerTime, changed);
+  applyIfChanged(p.noSamples, prefs.storage.noSamples, changed);
+  applyIfChanged(p.timeToForget, prefs.storage.timeToForget, changed);
+  applyIfChanged(p.knownHumDiffTrigger, prefs.storage.knownHumDiffTrigger, changed);
 }
 
 bool applyPrefsChange(SavedPrefs& p, bool& restartNetwork) {
-	applyNetConfig(p, restartNetwork);
+  applyNetConfig(p, restartNetwork);
 
-	bool changed = false;
-	applyFanConfig(p, changed);
-	applyHeuristicConfig(p, changed);
+  bool changed = false;
+  applyFanConfig(p, changed);
+  applyHeuristicConfig(p, changed);
 
   return changed | restartNetwork;
 }
@@ -343,7 +343,7 @@ void getHistoryData(int count, String& labelData, String &tempData, String& humD
 }
 
 void handleRoot() {
-	Serial.println("root");
+  Serial.println("root");
   if (checkAuth() == false) {
     return;
   }
@@ -384,7 +384,6 @@ void handleSetup() {
   String heur("heur");
   heur += prefs.storage.selectedHeuristic;
   html.replace("${selectedHeuristic}", heur);
-
 
   httpServer.send(200, "text/html", html);
 }

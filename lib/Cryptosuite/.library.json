@@ -1,0 +1,40 @@
+{
+    "name": "Cryptosuite", 
+    "repository": {
+        "url": "https://github.com/Cathedrow/Cryptosuite.git", 
+        "type": "git"
+    }, 
+    "platforms": [
+        "atmelavr", 
+        "atmelsam", 
+        "espressif8266", 
+        "intel_arc32", 
+        "microchippic32", 
+        "nordicnrf51", 
+        "teensy", 
+        "timsp430"
+    ], 
+    "frameworks": [
+        "arduino"
+    ], 
+    "version": "1.0.0", 
+    "export": {
+        "include": "Sha"
+    }, 
+    "authors": [
+        {
+            "maintainer": false, 
+            "name": "Peter Knight", 
+            "url": "https://github.com/Cathedrow", 
+            "email": "cathedrow@gmail.com"
+        }
+    ], 
+    "keywords": [
+        "sha", 
+        "sha1", 
+        "hmac", 
+        "sha256"
+    ], 
+    "id": 2060, 
+    "description": "Cryptographic suite for Arduino (SHA-1, SHA-256, HMAC-SHA-1 and HMAC-SHA-256)"
+}
