@@ -90,6 +90,10 @@ void Prefs::defaultValues() {
   memset(&storage.password[0], 0, sizeof(storage.password));
   memset(&storage.inNetworkName[0], 0, sizeof(storage.inNetworkName));
   strcpy(&storage.inNetworkName[0], "HumSensor");
+  memset(&storage.securityKey[0], 0, sizeof(storage.securityKey));
+  memset(&storage.username[0], 0, sizeof(storage.username));
+  strcpy(&storage.username[0], "Lampster");
+  memset(&storage.userPassword[0], 0, sizeof(storage.userPassword));
 }
 
 void Prefs::save() {

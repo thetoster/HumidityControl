@@ -1,0 +1,43 @@
+R"(
+<!doctype html>
+<html lang='pl'>
+  <head>
+    <meta charset='UTF-8'>
+    <meta http-equiv='Content-Type' content='text/html; charset=utf-8' />
+    <meta http-equiv='Content-Language' content='pl'  />
+    <meta name='viewport' content='width=device-width, initial-scale=1, shrink-to-fit=no'>
+    <title>Konfiguracja</title>
+  </head>
+  <body>
+    <form method='POST'>
+      <table>
+        <tr>
+          <td>Nazwa punktu dostępowego (SSID)</td>
+          <td><input type='text' id='ssid' name='ssid' placeholder='Podaj nazwę sieci' value='${ssid}'></td>
+        </tr>
+        <tr>
+          <td>Hasło do punktu dostępowego</td>
+          <td><input type='password' id='wifiPassword' name='wifiPassword' placeholder='Podaj hasło do sieci' ></td>
+        </tr>
+        <tr>
+          <td>Nazwa czujnika (MDNS)</td>
+          <td><input type='text' id='inNetworkName' name='inNetworkName' placeholder='Nazwa czujnika w sieci' value='${inNetworkName}'></td>
+        </tr>
+        <tr>
+          <td>Nazwa konta admina</td>
+          <td><input type='text' id='username' name='username' placeholder='Nazwa administratora' value='${username}'></td>
+        </tr>
+        <tr>
+          <td>Hasło admina</td>
+          <td><input type='password' id='userPassword' name='userPassword' placeholder='Hasło' ></td>
+        </tr>
+        <tr>
+          <td>Klucz szyfrowania</td>
+          <td><input type='text' id='securityKey' name='securityKey' placeholder='HexuHexu' value='${secureKey}'></td>
+        </tr>        
+      </table>
+      <button type='submit' formaction='/config'>Zapisz konfiguracje</button>
+    </form>
+  </body>
+</html>
+)"

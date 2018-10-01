@@ -42,8 +42,9 @@
 #include "EnvLogic.h"
 #include "Prefs.h"
 #include "Updater.h"
+#include <sha256.h>
 
-const String versionString = "1.3.1";
+const String versionString = "2.0.0";
 
 static const char rootHtml[] PROGMEM =
   #include "www/index.html"
@@ -53,19 +54,53 @@ static const char setupHtml[] PROGMEM =
     #include "www/setup.html"
 ;
 
+static const char netConfigHtml[] PROGMEM =
+    #include "www/netConfig.html"
+;
+
 ESP8266WebServer httpServer(80);
 MyServer myServer;
-static const char* www_username = "Lampster";
-static const char* www_realm = "Authentication Failed, use login name:Lampster";
+static const char* www_realm = "Authentication Failed";
 
 namespace {
 
 bool checkAuth() {
-  if (httpServer.authenticate(www_username, prefs.storage.password) == false) {
+  if (not httpServer.authenticate(prefs.storage.username,
+      prefs.storage.userPassword)) {
     httpServer.requestAuthentication(DIGEST_AUTH, www_realm);
     return false;
   };
   return true;
+}
+
+bool checkExtAuth() {
+  if ((not httpServer.hasHeader("nonce")) or
+      (not httpServer.hasHeader("HMac"))) {
+    return checkAuth();
+  };
+  String nonce = httpServer.header("nonce");
+  Sha256.initHmac(prefs.storage.securityKey, sizeof(prefs.storage.securityKey));
+  Sha256.print(nonce);
+  for(int t = 0; t < httpServer.args(); t++) {
+    Sha256.print(httpServer.argName(t));
+    Sha256.print(httpServer.arg(t));
+  }
+  Sha256.print(nonce);
+
+  String hmac;
+  hmac.reserve(64);
+  uint8_t* hash = Sha256.resultHmac();
+  for (int t = 0; t < 32; t++) {
+    hmac.concat( (char)(65 + (hash[t]>>4)));
+    hmac.concat( (char)(65 + (hash[t]&0xF)));
+  }
+  Serial.print("nonce:");
+  Serial.println(nonce);
+  Serial.print("   my hmac:");
+  Serial.println(hmac);
+  Serial.print("other hmac:");
+  Serial.println(httpServer.header("HMac"));
+  return hmac.compareTo(httpServer.header("HMac")) == 0;
 }
 
 void handleNotFound(){
@@ -103,6 +138,37 @@ void handleVersion() {
   String response;
   root.printTo(response);
   httpServer.send(200, "application/json", response);
+}
+
+String toHexString(uint8_t* data, int len) {
+  String result;
+  for (int t = 0; t < len; t++) {
+    uint8_t b = (data[t] >> 4) & 0x0F;
+    char c = (b < 0xA) ? '0' + b : 'A' + b - 0xA;
+    result.concat(c);
+
+    b = data[t] & 0x0F;
+    c = (b < 0xA) ? '0' + b : 'A' + b - 0xA;
+    result.concat(c);
+  }
+
+  return result;
+}
+
+void handleNetConfig() {
+  if (checkAuth() == false) {
+    return;
+  }
+  String html = FPSTR(netConfigHtml);
+
+  //network
+  html.replace("${ssid}", prefs.storage.ssid);
+  html.replace("${inNetworkName}", prefs.storage.inNetworkName);
+  html.replace("${username}", prefs.storage.username);
+  html.replace("${secureKey}", toHexString(prefs.storage.securityKey,
+      sizeof(prefs.storage.securityKey)));
+
+  httpServer.send(200, "text/html", html);
 }
 
 void handleGetConfig() {
@@ -171,12 +237,68 @@ bool emplaceChars(char* ptr, String argName, int maxLen) {
   return fail;
 }
 
+
+bool handleSingleHex(const char& c, uint8_t& val) {
+  if (c >= '0' && c <= '9') {
+    val += c - '0';
+  } else if (c >= 'A' && c <= 'F') {
+    val += 10 + c - 'A';
+  } else if (c >= 'a' && c <= 'f') {
+    val += 10 + c - 'a';
+  } else {
+    return false;
+  }
+
+  return true;
+}
+
+int hexStringToArray(String hex, uint8_t* data, size_t mLen){
+  size_t hexLen = hex.length() / 2;
+  if ((hex.length() % 2 != 0) or (hexLen > mLen)) {
+    memset(data, 0, mLen);
+    return 0;
+  }
+
+  int index = 0;
+  for (auto it = hex.begin(); it != hex.end();) {
+    uint8_t val = 0;
+
+    bool success = handleSingleHex(*it, val);
+    it++;
+    val <<= 4;
+
+    success &= handleSingleHex(*it, val);
+    it++;
+
+    if (not success) {
+      memset(data, 0, mLen);
+      return 0;
+    }
+
+    data[index] = val;
+    index++;
+  }
+  return mLen;
+}
+
+bool emplaceHex(uint8_t* ptr, String argName, int maxLen) {
+  bool fail;
+  String tmp = getStringArg(argName, maxLen * 2 + 2, &fail);
+  if (not fail) {
+    hexStringToArray(tmp, ptr, maxLen);
+  }
+  return fail;
+}
+
 bool handleNetworkConfig(SavedPrefs& p) {
   bool fail = false;
 
   fail |= emplaceChars(p.ssid, "ssid", sizeof(p.ssid));
-  fail |= emplaceChars(p.password, "password", sizeof(p.password));
+  fail |= emplaceChars(p.password, "wifiPassword", sizeof(p.password));
   fail |= emplaceChars(p.inNetworkName, "inNetworkName", sizeof(p.inNetworkName));
+  fail |= emplaceChars(p.username, "username", sizeof(p.username));
+  fail |= emplaceChars(p.userPassword, "userPassword", sizeof(p.userPassword));
+  fail |= emplaceHex(p.securityKey, "securityKey", sizeof(p.securityKey));
 
   return fail;
 }
@@ -218,21 +340,49 @@ bool handleHeuristicConfig(SavedPrefs& p) {
   return fail;
 }
 
-void applyNetConfig(SavedPrefs& p, bool& changed) {
+bool ismemzero(uint8_t* ptr, size_t size) {
+  for(size_t t = 0; t < size; t++) {
+    if (*ptr != 0) {
+      return false;
+    }
+    ptr++;
+  }
+  return true;
+}
+
+void applyNetConfig(SavedPrefs& p, bool& changed, bool& doNetRestart) {
 
   if ((strncmp(prefs.storage.inNetworkName, p.inNetworkName, sizeof(p.inNetworkName)) != 0)
       && (strnlen(p.inNetworkName, sizeof(p.inNetworkName)) > 0)) {
     strncpy(prefs.storage.inNetworkName, p.inNetworkName, sizeof(prefs.storage.inNetworkName));
+    doNetRestart = true;
     changed = true;
   }
   if ((strncmp(prefs.storage.password, p.password, sizeof(prefs.storage.password)) != 0)
       && (strnlen(p.password, sizeof(p.password)) > 0)) {
     strncpy(prefs.storage.password, p.password, sizeof(prefs.storage.password));
+    doNetRestart = true;
     changed = true;
   }
   if ((strncmp(prefs.storage.ssid, p.ssid, sizeof(prefs.storage.ssid)) != 0)
       && (strnlen(p.ssid, sizeof(p.ssid)) > 0)) {
     strncpy(prefs.storage.ssid, p.ssid, sizeof(prefs.storage.ssid));
+    doNetRestart = true;
+    changed = true;
+  }
+  if ((strncmp(prefs.storage.username, p.username, sizeof(prefs.storage.username)) != 0)
+      && (strnlen(p.username, sizeof(p.username)) > 0)) {
+    strncpy(prefs.storage.username, p.username, sizeof(prefs.storage.username));
+    changed = true;
+  }
+  if ((strncmp(prefs.storage.userPassword, p.userPassword, sizeof(prefs.storage.userPassword)) != 0)
+      && (strnlen(p.userPassword, sizeof(p.userPassword)) > 0)) {
+    strncpy(prefs.storage.userPassword, p.userPassword, sizeof(prefs.storage.userPassword));
+    changed = true;
+  }
+  if ((memcmp(prefs.storage.securityKey, p.securityKey, sizeof(p.securityKey)) != 0) and
+      (not ismemzero(p.securityKey, sizeof(p.securityKey))) ) {
+    memcpy(prefs.storage.securityKey, p.securityKey, sizeof(p.securityKey));
     changed = true;
   }
 }
@@ -261,9 +411,8 @@ void applyHeuristicConfig(SavedPrefs& p, bool& changed) {
 }
 
 bool applyPrefsChange(SavedPrefs& p, bool& restartNetwork) {
-  applyNetConfig(p, restartNetwork);
-
   bool changed = false;
+  applyNetConfig(p, changed, restartNetwork);
   applyFanConfig(p, changed);
   applyHeuristicConfig(p, changed);
 
@@ -306,14 +455,20 @@ void handleSetConfig() {
 }
 
 void handleRun() {
-  if (checkAuth() == false) {
+  Serial.println("handleRun");
+  if (checkExtAuth() == false) {
     return;
   }
   bool fail = false;
   int sec = getIntArg("time", 40 * 60, &fail);
+  Serial.print("Sec:");
+  Serial.print(sec);
+  Serial.print(", fail:");
+  Serial.println(fail);
   if (fail == false && sec > 0) {
       envLogic.requestRunFor(sec);
       httpServer.send(200, "text/plain", "200: OK");
+      Serial.println("OK");
   } else {
     httpServer.send(400, "text/plain", "400: BAD REQUEST");
   }
@@ -364,10 +519,6 @@ void handleSetup() {
     return;
   }
   String html = FPSTR(setupHtml);
-
-  //network
-  html.replace("${ssid}", prefs.storage.ssid);
-  html.replace("${inNetworkName}", prefs.storage.inNetworkName);
 
   //fan
   html.replace("${muteFanOff}", String(prefs.storage.muteFanOff));
@@ -424,19 +575,46 @@ void handleHistory() {
 }
 
 void handleStatus() {
-  if (checkAuth() == false) {
+  if (checkExtAuth() == false) {
     return;
   }
   DynamicJsonBuffer  jsonBuffer;
   JsonObject& root = jsonBuffer.createObject();
-  root["H"] = envLogic.lastHum;
-  root["T"] = envLogic.lastTemp;
-  root["D"] = millis();
+  if (httpServer.hasArg("Simplified")) {
+    root["l1"] = "Wilgotnosc:";
+    root["l2"] = String(envLogic.lastHum) + " %";
+
+  } else {
+    root["H"] = envLogic.lastHum;
+    root["T"] = envLogic.lastTemp;
+    root["D"] = millis();
+  }
   String response;
   root.printTo(response);
   httpServer.send(200, "application/json", response);
 }
 
+}
+
+MyServer::MyServer() : needsConfig(true) {
+  httpServer.on("/", handleRoot);
+  httpServer.on("/netSetup", HTTP_GET, handleNetConfig);
+  httpServer.on("/config", HTTP_GET, handleGetConfig);
+  httpServer.on("/factoryReset", handleFactoryConfig);
+  httpServer.on("/config", HTTP_POST, handleSetConfig);
+  httpServer.on("/status", handleStatus);
+  httpServer.on("/history", handleHistory);
+  httpServer.on("/run", HTTP_POST, handleRun);
+  httpServer.on("/clearHistory", handleClearHistory);
+  httpServer.on("/update", HTTP_POST, handleUpdate);
+  httpServer.on("/version", HTTP_GET, handleVersion);
+  httpServer.on("/setup", HTTP_GET, handleSetup);
+  httpServer.onNotFound(handleNotFound);
+
+  const char * headerkeys[] = {"nonce", "HMac"} ;
+  size_t headerkeyssize = sizeof(headerkeys) / sizeof(char*);
+  //ask server to track these headers
+  httpServer.collectHeaders(headerkeys, headerkeyssize);
 }
 
 void MyServer::switchToConfigMode() {
@@ -459,18 +637,23 @@ void MyServer::connectToAccessPoint() {
 }
 
 void MyServer::generateRandomPassword() {
+  memset(prefs.storage.userPassword, 0, sizeof(prefs.storage.userPassword));
   memset(prefs.storage.password, 0, sizeof(prefs.storage.password));
   for(int t = 0; t < 8; t++) {
     int r = ESP8266TrueRandom.random(10);
     if (r < 3) {
-      prefs.storage.password[t] = ESP8266TrueRandom.random('Z'-'A') + 'A';
+      prefs.storage.userPassword[t] = ESP8266TrueRandom.random('Z'-'A') + 'A';
 
     } else if (r < 6) {
-      prefs.storage.password[t] = ESP8266TrueRandom.random('9'-'0') + '0';
+      prefs.storage.userPassword[t] = ESP8266TrueRandom.random('9'-'0') + '0';
 
     } else {
-      prefs.storage.password[t] = ESP8266TrueRandom.random('z'-'a') + 'a';
+      prefs.storage.userPassword[t] = ESP8266TrueRandom.random('z'-'a') + 'a';
     }
+  }
+  memcpy(prefs.storage.password, prefs.storage.userPassword, 8);
+  for(size_t t = 0; t < sizeof(prefs.storage.securityKey); t++) {
+    prefs.storage.securityKey[t] = ESP8266TrueRandom.random(256);
   }
 }
 
@@ -483,7 +666,8 @@ bool MyServer::isServerConfigured() {
 }
 
 String MyServer::getPassword() {
-  return prefs.storage.password[0] == 0 ? "<-->" : String(prefs.storage.password);
+  return prefs.storage.userPassword[0] == 0 ? "<-->" :
+      String(prefs.storage.userPassword);
 }
 
 void MyServer::enableSoftAP() {
@@ -507,18 +691,6 @@ void MyServer::restart() {
   } else {
     connectToAccessPoint();
   }
-  httpServer.on("/", handleRoot);
-  httpServer.on("/config", HTTP_GET, handleGetConfig);
-  httpServer.on("/factoryReset", handleFactoryConfig);
-  httpServer.on("/config", HTTP_POST, handleSetConfig);
-  httpServer.on("/status", handleStatus);
-  httpServer.on("/history", handleHistory);
-  httpServer.on("/run", HTTP_POST, handleRun);
-  httpServer.on("/clearHistory", handleClearHistory);
-  httpServer.on("/update", HTTP_POST, handleUpdate);
-  httpServer.on("/version", HTTP_GET, handleVersion);
-  httpServer.on("/setup", HTTP_GET, handleSetup);
-  httpServer.onNotFound(handleNotFound);
 
   httpServer.begin();
   MDNS.notifyAPChange();

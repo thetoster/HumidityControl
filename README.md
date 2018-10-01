@@ -21,7 +21,8 @@ Here is shourt summary of rest api. Each call requires authentication (see prope
 | /history      | GET    | Returns JSON encoded history of mesurements, in this same format as /status. It also contains ```now``` field which allows to put those measurements in time line |
 | /clearHistory | GET    | Wipeouts all historical readings. |
 | /run          | POST   | Enable fan relay for given amount of seconds, regardles of humidity reading. Single argument ```time``` is expected with runtime in seconds |
-| /setup        | GET    | Request configuration page. |
+| /setup        | GET    | Request configuration page for behaviour configuration and firmware update. |
+| /netSetup     | GET    | Configuration page for network. |
 | /update       | POST   | Starts firmware update, it accepts single agrument ```url``` which should point to new firmware image. |
 | /version      | GET    | To get current version of firmware. |
 

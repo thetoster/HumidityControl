@@ -19,26 +19,6 @@ R"(
     
     <div class='container mb-4'>
         <form method='POST'>
-            <div class='card'>
-	            <div class='card-header alert alert-success' role='alert'>
-	              Konfiguracja sieci
-	            </div>
-	            <div class='form-group'>
-	                <label for='ssid'>Nazwa punktu dostępowego (SSID)</label>
-	                <input type='text' class='form-control' id='ssid' name='ssid' aria-describedby='ssidHelp' placeholder='Podaj nazwę sieci' value='${ssid}'>
-	                <small id='ssidHelp' class='form-text text-muted'>Po zapisaniu konfiguracji, czujnik będzie starał się połączyć do tej sieci.</small>
-	            </div>
-	            <div class='form-group'>
-	                <label for='password'>Hasło do punktu dostępowego</label>
-	                <input type='password' class='form-control' id='password' name='password' aria-describedby='passwordHelp' placeholder='Podaj hasło do sieci' >
-	                <small id='passwordHelp' class='form-text text-muted'>To hasło będzie użyte podczas próby połączenia się do sieci o podanej nazwie (ssid).</small>
-	            </div>
-	            <div class='form-group'>
-	                <label for='inNetworkName'>Nazwa czujnika</label>
-	                <input type='text' class='form-control' id='inNetworkName' name='inNetworkName' aria-describedby='inNetworkNameHelp' placeholder='Nazwa czujnika w sieci' value='${inNetworkName}'>
-	                <small id='inNetworkNameHelp' class='form-text text-muted'>Pod tą nazwą czujnik będzie się rozgłaszać w sieci za pomocą protokołu mDNS.</small>
-	            </div>
-	         </div>
 	         <div class='card'>
 	         	<div class='card-header alert alert-success' role='alert'>
 	              Konfiguracja Wiatraka
