@@ -35,7 +35,7 @@
  */
 #include <Measurement.h>
 
-Measurement::Measurement(int32_t timestamp, int8_t humidity, int8_t temp):
-timestamp(timestamp), humidity(humidity), temp(temp) {
+Measurement::Measurement(int32_t timestamp, int8_t humidity):
+timestamp(timestamp), humidity(humidity) {
 }
 

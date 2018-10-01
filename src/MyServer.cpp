@@ -474,9 +474,8 @@ void handleRun() {
   }
 }
 
-void getHistoryData(int count, String& labelData, String &tempData, String& humData) {
+void getHistoryData(int count, String& labelData, String& humData) {
   labelData = "";
-  tempData = "";
   humData = "";
   auto m = envLogic.measurements.begin();
   if ((unsigned int )count < envLogic.measurements.size()) {
@@ -487,13 +486,10 @@ void getHistoryData(int count, String& labelData, String &tempData, String& humD
     labelData.concat("'");
     labelData.concat( millisToTime(mil - m->timestamp) );
     labelData.concat("',");
-    tempData.concat( String(m->temp) );
-    tempData.concat(",");
     humData.concat( String(m->humidity) );
     humData.concat(",");
   }
   labelData.remove(labelData.length() - 1);
-  tempData.remove(labelData.length() - 1);
   humData.remove(labelData.length() - 1);
 }
 
@@ -505,10 +501,9 @@ void handleRoot() {
   Serial.println("root>>");
   //put config inside
   String html = FPSTR(rootHtml);
-  String labels, temps, hums;
-  getHistoryData(60, labels, temps, hums);
+  String labels, hums;
+  getHistoryData(60, labels, hums);
   html.replace("${dataLabels}", labels);
-  html.replace("${dataTemp}", temps);
   html.replace("${dataHum}", hums);
   httpServer.send(200, "text/html", html);
   Serial.println("root!end");
@@ -565,7 +560,6 @@ void handleHistory() {
   for(auto iter = envLogic.measurements.begin(); iter != envLogic.measurements.end(); iter++) {
     JsonObject& item = jsonBuffer.createObject();
     item["H"] = iter->humidity;
-    item["T"] = iter->temp;
     item["D"] = iter->timestamp;
     items.add(item);
   }

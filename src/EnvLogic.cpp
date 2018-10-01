@@ -88,15 +88,15 @@ void EnvLogic::update() {
 }
 
 void EnvLogic::collectMeasurementIfNeeded() {
-	long mil = millis();
-	if (measurements.size() > 0) {
-		const Measurement& mes = measurements.back();
-		if ((lastHum != mes.humidity) or (lastTemp != mes.temp)) {
-			addMeasurement(mil);
-		}
-	} else {
-		addMeasurement(mil);
-	}
+  long mil = millis();
+  if (measurements.size() > 0) {
+    const Measurement& mes = measurements.back();
+    if (lastHum != mes.humidity) {
+      addMeasurement(mil);
+    }
+  } else {
+    addMeasurement(mil);
+  }
 }
 
 void EnvLogic::addMeasurement(long mil) {
@@ -104,7 +104,7 @@ void EnvLogic::addMeasurement(long mil) {
   if (totalSize >= totalMeasurementMemoryLimit) {
     measurements.erase(measurements.begin());
   }
-  measurements.push_back(Measurement(mil, lastHum, lastTemp));
+  measurements.push_back(Measurement(mil, lastHum));
 }
 
 bool EnvLogic::isFanRunning() {
@@ -119,9 +119,8 @@ String EnvLogic::getDisplayTemp() {
 }
 
 String EnvLogic::getDisplayHum() {
-  String hum = "Wilg.:";
-  hum += lastHum;
-  hum += "%";
+  String hum(lastHum);
+  hum += " %";
   return hum;
 }
 

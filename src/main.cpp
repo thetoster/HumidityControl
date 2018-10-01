@@ -8,6 +8,7 @@
 #include "Updater.h"
 #include "Prefs.h"
 #include "Buttons.h"
+#include "lfont.h"
 
 #define TIME_TO_RESET (1000 * 24 * 3600)
 
@@ -51,15 +52,25 @@ void normalMode() {
   display.setColor(WHITE);
   display.setTextAlignment(TEXT_ALIGN_LEFT);
   display.setFont(ArialMT_Plain_16);
+  bool hCenter = false;
   if (envLogic.isFanRunning()) {
     display.drawString(0, 0, envLogic.getDisplayFan());
+    if (envLogic.getDisplayFan().length() == 0) {
+      hCenter = true;
+    }
   } else {
     //show network state
     display.drawString(0, 0, myServer.getStatus());
+    if (myServer.getStatus().length() == 0) {
+      hCenter = true;
+    }
   }
-  display.setFont(ArialMT_Plain_24);
-  display.drawString(0, 16, envLogic.getDisplayHum());
-  display.drawString(0, 37, envLogic.getDisplayTemp());
+  display.setFont(Chewy_Regular_42);
+  String str = envLogic.getDisplayHum();
+  int w = display.getStringWidth(str);
+  display.drawString((display.width() - w) / 2,
+      hCenter ? (display.getHeight() - 42) / 2 : 16,
+      str);
   display.display();
   delay(200);
 }
