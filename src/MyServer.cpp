@@ -494,11 +494,9 @@ void getHistoryData(int count, String& labelData, String& humData) {
 }
 
 void handleRoot() {
-  Serial.println("root");
   if (checkAuth() == false) {
     return;
   }
-  Serial.println("root>>");
   //put config inside
   String html = FPSTR(rootHtml);
   String labels, hums;
@@ -506,7 +504,8 @@ void handleRoot() {
   html.replace("${dataLabels}", labels);
   html.replace("${dataHum}", hums);
   httpServer.send(200, "text/html", html);
-  Serial.println("root!end");
+  delay(100);
+  httpServer.client().stop();
 }
 
 void handleSetup() {
@@ -532,6 +531,8 @@ void handleSetup() {
   html.replace("${selectedHeuristic}", heur);
 
   httpServer.send(200, "text/html", html);
+  delay(100);
+  httpServer.client().stop();
 }
 
 void handleUpdate() {
@@ -547,6 +548,8 @@ void handleUpdate() {
   } else {
     httpServer.send(400, "text/plain", "400: BAD REQUEST");
   }
+  delay(100);
+  httpServer.client().stop();
 }
 
 void handleHistory() {
@@ -566,6 +569,8 @@ void handleHistory() {
   String response;
   root.printTo(response);
   httpServer.send(200, "application/json", response);
+  delay(100);
+  httpServer.client().stop();
 }
 
 void handleStatus() {
@@ -586,6 +591,8 @@ void handleStatus() {
   String response;
   root.printTo(response);
   httpServer.send(200, "application/json", response);
+  delay(100);
+  httpServer.client().stop();
 }
 
 }
