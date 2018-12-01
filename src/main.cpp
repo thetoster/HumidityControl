@@ -88,15 +88,7 @@ void configMode() {
   delay(200);
 }
 
-void periodicResetHandler() {
-  if (millis() > TIME_TO_RESET) {
-    ESP.restart();
-  }
-}
-
 void loop() {
-  periodicResetHandler();
-
   //updater has it's own display management
   if (updater.update()) {
     return;
