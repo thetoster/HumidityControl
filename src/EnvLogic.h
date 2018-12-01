@@ -46,6 +46,7 @@ class EnvLogic {
   public:
     int lastTemp;
     int lastHum;
+    float humAverage;
     std::vector<Measurement> measurements;
 
     EnvLogic();

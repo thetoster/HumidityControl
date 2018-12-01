@@ -41,11 +41,12 @@
 #include "NiceToHaveHeuristic.h"
 
 static constexpr int totalMeasurementMemoryLimit = 4 * 1024;
+static constexpr float ETA = 0.9;
 
 EnvLogic envLogic;
 
 EnvLogic::EnvLogic() :
-  lastTemp(0), lastHum(0), requestedRunToMillis(0), lastUpdate(0) {
+  lastTemp(0), lastHum(0), requestedRunToMillis(0), lastUpdate(0), humAverage(0) {
 
   pinMode(UNUSED_CTRL_PIN, OUTPUT);
   digitalWrite(UNUSED_CTRL_PIN, LOW);
@@ -77,7 +78,9 @@ bool EnvLogic::fanIsRequested() {
 void EnvLogic::update() {
   if (millis() - lastUpdate > 1000) {
     lastTemp = sht.getTemperature();
-    lastHum = sht.getHumidity();
+    //low-pass filter
+    humAverage = ETA * sht.getHumidity() + (1 - ETA) * humAverage;
+    lastHum = static_cast<int>(humAverage);
     lastUpdate = millis();
   }
 
