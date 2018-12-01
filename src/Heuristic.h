@@ -40,8 +40,8 @@
 
 class Heuristic {
   public:
-		Heuristic(Fan& fan) : fan(fan) {}
-		virtual ~Heuristic() = default;
+    Heuristic(Fan& fan) : fan(fan) {}
+    virtual ~Heuristic() = default;
     virtual void update(int humidity) = 0;
   protected:
     Fan& fan;
