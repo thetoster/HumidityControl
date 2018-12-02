@@ -79,7 +79,7 @@ void EnvLogic::update() {
   if (millis() - lastUpdate > 1000) {
     lastTemp = sht.getTemperature();
     //low-pass filter
-    humAverage = ETA * sht.getHumidity() + (1 - ETA) * humAverage;
+    humAverage = (1.0f - ETA) * sht.getHumidity() + ETA * humAverage;
     lastHum = static_cast<int>(humAverage);
     lastUpdate = millis();
   }
