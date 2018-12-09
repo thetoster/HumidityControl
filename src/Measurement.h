@@ -40,9 +40,10 @@
 
 class __attribute__ ((packed)) Measurement {
   public:
-    int32_t timestamp;
+    uint32_t timestamp;
     int8_t humidity;
-    Measurement(int32_t timestamp, int8_t humidity);
+    Measurement() : timestamp(0), humidity(0) {};
+    Measurement(int32_t timestamp, int8_t humidity) : timestamp(timestamp), humidity(humidity) {}
 };
 
 #endif /* Measurement_hpp */

@@ -581,11 +581,10 @@ void handleStatus() {
   JsonObject& root = jsonBuffer.createObject();
   if (httpServer.hasArg("Simplified")) {
     root["l1"] = "Wilgotnosc:";
-    root["l2"] = String(envLogic.lastHum) + " %";
+    root["l2"] = String(envLogic.getHumidity()) + " %";
 
   } else {
-    root["H"] = envLogic.lastHum;
-    root["T"] = envLogic.lastTemp;
+    root["H"] = envLogic.getHumidity();
     root["D"] = millis();
   }
   String response;

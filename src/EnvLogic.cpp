@@ -40,13 +40,17 @@
 #include "heuristic/LimiterHeuristic.h"
 #include "heuristic/NiceToHaveHeuristic.h"
 
-static constexpr int totalMeasurementMemoryLimit = 4 * 1024;
-static constexpr float ETA = 0.9;
+namespace {
+  constexpr float ETA = 0.9;
+  constexpr int MEAS_COUNT = 60;
+  Measurement measurementBuff[MEAS_COUNT];
+}
 
 EnvLogic envLogic;
 
 EnvLogic::EnvLogic() :
-  lastTemp(0), lastHum(0), requestedRunToMillis(0), lastUpdate(0), humAverage(0) {
+    humAverage(0), measurements(
+        PreAllocator<Measurement>(measurementBuff, sizeof(MEAS_COUNT))), requestedRunToMillis(0), lastUpdate(0) {
 
   pinMode(UNUSED_CTRL_PIN, OUTPUT);
   digitalWrite(UNUSED_CTRL_PIN, LOW);
@@ -68,19 +72,21 @@ int EnvLogic::getMaxAllowedHum() {
 }
 
 bool EnvLogic::isTooWet() {
-	return lastHum > getMaxAllowedHum();
+  return getHumidity() > getMaxAllowedHum();
 }
 
 bool EnvLogic::fanIsRequested() {
-	return (millis() < (unsigned long)requestedRunToMillis);
+  return (millis() < (unsigned long) requestedRunToMillis);
+}
+
+int EnvLogic::getHumidity() {
+  return static_cast<int>(humAverage);
 }
 
 void EnvLogic::update() {
   if (millis() - lastUpdate > 1000) {
-    lastTemp = sht.getTemperature();
     //low-pass filter
     humAverage = (1.0f - ETA) * sht.getHumidity() + ETA * humAverage;
-    lastHum = static_cast<int>(humAverage);
     lastUpdate = millis();
   }
 
@@ -91,10 +97,10 @@ void EnvLogic::update() {
 }
 
 void EnvLogic::collectMeasurementIfNeeded() {
-  long mil = millis();
+  unsigned long mil = millis();
   if (measurements.size() > 0) {
     const Measurement& mes = measurements.back();
-    if (lastHum != mes.humidity) {
+    if (getHumidity() != mes.humidity) {
       addMeasurement(mil);
     }
   } else {
@@ -102,34 +108,26 @@ void EnvLogic::collectMeasurementIfNeeded() {
   }
 }
 
-void EnvLogic::addMeasurement(long mil) {
-  int totalSize = sizeof(Measurement) * measurements.size() + 1;
-  if (totalSize >= totalMeasurementMemoryLimit) {
+void EnvLogic::addMeasurement(unsigned long mil) {
+  if (measurements.size() == MEAS_COUNT) {
     measurements.erase(measurements.begin());
   }
-  measurements.push_back(Measurement(mil, lastHum));
+  measurements.push_back(Measurement(mil, getHumidity()));
 }
 
 bool EnvLogic::isFanRunning() {
   return fan.isRunning();
 }
 
-String EnvLogic::getDisplayTemp() {
-  String temp = "Temp.:";
-  temp += lastTemp;
-  temp += "C";
-  return temp;
-}
-
 String EnvLogic::getDisplayHum() {
-  String hum(lastHum);
+  String hum(getHumidity());
   hum += " %";
   return hum;
 }
 
 String EnvLogic::getDisplayFan() {
   long fanTime;
-  if (millis() < (unsigned long)requestedRunToMillis) {
+  if (millis() < (unsigned long) requestedRunToMillis) {
     fanTime = requestedRunToMillis - millis();
 
   } else {
@@ -145,7 +143,7 @@ String millisToTime(long mil) {
     text += mil;
     text += "s";
 
-  } else if (mil < 3600){
+  } else if (mil < 3600) {
     text += mil / 60;
     text += ":";
     if (mil % 60 < 10) {
@@ -157,9 +155,9 @@ String millisToTime(long mil) {
 }
 
 Heuristic* EnvLogic::getSelectedHeuristic() {
-	int i = prefs.storage.selectedHeuristic;
-	if ((i >= (int)heuristics.size()) or (i < 0)) {
-		i = 0;
-	}
-	return heuristics[i];
+  int i = prefs.storage.selectedHeuristic;
+  if ((i >= (int) heuristics.size()) or (i < 0)) {
+    i = 0;
+  }
+  return heuristics[i];
 }

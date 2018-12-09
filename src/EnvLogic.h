@@ -40,22 +40,21 @@
 #include "periphery/Fan.h"
 #include "heuristic/Heuristic.h"
 #include "periphery/SHT21.h"
+#include "misc/PreAllocator.h"
 #include <vector>
 
 class EnvLogic {
   public:
-    int lastTemp;
-    int lastHum;
     float humAverage;
-    std::vector<Measurement> measurements;
+    std::vector<Measurement, PreAllocator<Measurement>> measurements;
 
     EnvLogic();
     void update();
-    String getDisplayTemp();
     String getDisplayHum();
     String getDisplayFan();
     bool isFanRunning();
     void requestRunFor(int seconds);
+    int getHumidity();
   private:
     const uint8_t FAN_CONTROL_PIN = 12;
     const uint8_t UNUSED_CTRL_PIN = 13;
@@ -66,7 +65,7 @@ class EnvLogic {
     std::vector<Heuristic*> heuristics;
 
     int getMaxAllowedHum();
-    void addMeasurement(long mil);
+    void addMeasurement(unsigned long mil);
 
     bool isTooWet();
     bool fanIsRequested();
