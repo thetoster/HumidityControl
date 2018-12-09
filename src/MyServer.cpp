@@ -132,7 +132,7 @@ void handleVersion() {
   if (checkAuth() == false) {
     return;
   }
-  DynamicJsonBuffer  jsonBuffer;
+  StaticJsonBuffer<50>  jsonBuffer;
   JsonObject& root = jsonBuffer.createObject();
   root["version"] = versionString;
   String response;
@@ -175,7 +175,7 @@ void handleGetConfig() {
   if (checkAuth() == false) {
     return;
   }
-  DynamicJsonBuffer  jsonBuffer;
+  StaticJsonBuffer<400>  jsonBuffer;
   JsonObject& root = jsonBuffer.createObject();
 
   //Network
@@ -577,7 +577,7 @@ void handleStatus() {
   if (checkExtAuth() == false) {
     return;
   }
-  DynamicJsonBuffer  jsonBuffer;
+  StaticJsonBuffer<50>  jsonBuffer;
   JsonObject& root = jsonBuffer.createObject();
   if (httpServer.hasArg("Simplified")) {
     root["l1"] = "Wilgotnosc:";
