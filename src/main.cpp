@@ -6,9 +6,9 @@
 #include "EnvLogic.h"
 #include "MyServer.h"
 #include "Updater.h"
-#include "Prefs.h"
-#include "Buttons.h"
-#include "lfont.h"
+#include "misc/Prefs.h"
+#include "periphery/Buttons.h"
+#include "misc/lfont.h"
 
 #define TIME_TO_RESET (1000 * 24 * 3600)
 

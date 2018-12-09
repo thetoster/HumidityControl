@@ -29,48 +29,50 @@
  OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
- Fan.cpp
- Created on: Jul 17, 2018
+ AdaptiveHeuristic.cpp
+ Created on: Jul 18, 2018
  Author: Bartłomiej Żarnowski (Toster)
  */
 
-#include "Fan.h"
-#include "Prefs.h"
+#include "AdaptiveHeuristic.h"
+#include "misc/Prefs.h"
+#include <numeric>
+#include <algorithm>
 
-Fan::Fan(uint8_t pin) : shouldRun(false), lastTurnOn(0), lastTurnOff(0), pin(pin), running(false) {
-  pinMode(pin, OUTPUT);
-  digitalWrite(pin, LOW);
+AdaptiveHeuristic::AdaptiveHeuristic(Fan &fan) : Heuristic(fan), disturber(Disturber(fan)) {}
+
+void AdaptiveHeuristic::update(int humidity) {
+  samples.push_back(humidity);
+
+  if (samples.size() == prefs.storage.noSamples) {
+    double mean, stdDev;
+    calcMeanAndStdDev(mean, stdDev);
+
+    fan.shouldRun = significantMeanChange(mean, stdDev);
+    baseMean = mean;
+    baseStdDev = stdDev;
+
+    samples.clear();
+  }
+
+  //random environment trigger changer
+  if (prefs.storage.useDisturber != 0) {
+  	disturber.update(humidity);
+  }
 }
 
-void Fan::setFan(bool enabled) {
-	running = enabled;
-	Serial.println(enabled ? "Fan:ON" : "Fan:OFF");
-	digitalWrite(pin, enabled ? HIGH : LOW);
+void AdaptiveHeuristic::calcMeanAndStdDev(double &mean, double &stdev) {
+  mean = std::accumulate(samples.begin(), samples.end(), 0.0) / samples.size();
+
+  double accum = 0.0;
+  for(auto i = samples.begin(); i != samples.end(); i++) {
+    accum += (*i - mean) * (*i - mean);
+  };
+
+  stdev = sqrt(accum / (samples.size()-1));
 }
 
-void Fan::update() {
-	if (shouldRun) {
-		if ((not running) && (not tooEarly(lastTurnOff, prefs.storage.muteFanOn))) {
-			lastTurnOn = millis();
-			setFan(true);
-		}
-
-	} else {
-		if (running && (not tooEarly(lastTurnOn, prefs.storage.muteFanOff))) {
-			lastTurnOff = millis();
-			setFan(false);
-		}
-	}
-}
-
-bool Fan::tooEarly(unsigned long timestamp, uint8_t sec) {
-	return millis() < (timestamp + 1000 * sec);
-}
-
-bool Fan::isRunning() const {
-	return running;
-}
-
-unsigned long Fan::getTurnOnFanMillis() const {
-	return running ? lastTurnOn : 0;
+bool AdaptiveHeuristic::significantMeanChange(double mean, double stdDev) {
+  double ss = baseStdDev < 0.1 ? baseMean / 12 : baseStdDev;
+  return (abs(mean - baseMean) > 2 * ss);
 }

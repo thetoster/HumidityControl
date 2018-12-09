@@ -5,7 +5,7 @@
 #ifndef HEURY_DISTURBER_H
 #define HEURY_DISTURBER_H
 
-#include "Fan.h"
+#include "periphery/Fan.h"
 
 class Disturber {
 

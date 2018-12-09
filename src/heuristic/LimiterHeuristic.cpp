@@ -29,23 +29,15 @@
  OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
- Heuristic.h
+ LimiterHeuristic.cpp
  Created on: Jul 18, 2018
  Author: Bartłomiej Żarnowski (Toster)
  */
-#ifndef HEURY_HEURISTIC_H
-#define HEURY_HEURISTIC_H
+#include "LimiterHeuristic.h"
+#include "misc/Prefs.h"
 
-#include "Fan.h"
+LimiterHeuristic::LimiterHeuristic(Fan &fan) : Heuristic(fan) {}
 
-class Heuristic {
-  public:
-    Heuristic(Fan& fan) : fan(fan) {}
-    virtual ~Heuristic() = default;
-    virtual void update(int humidity) = 0;
-  protected:
-    Fan& fan;
-};
-
-
-#endif //HEURY_HEURISTIC_H
+void LimiterHeuristic::update(int humidity) {
+  fan.shouldRun = (humidity > prefs.storage.humidityTrigger);
+}

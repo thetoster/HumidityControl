@@ -29,52 +29,36 @@
  OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
- AdaptiveHeuristic2.cpp
- Created on: Jul 19, 2018
+ Buttons.cpp
+ Created on: Jul 17, 2018
  Author: Bartłomiej Żarnowski (Toster)
  */
 
-#include "AdaptiveHeuristic2.h"
-#include "Prefs.h"
-#include <numeric>
-#include <algorithm>
+#include "misc/Prefs.h"
+#include "periphery/Buttons.h"
+#include <Arduino.h>
 
-AdaptiveHeuristic2::AdaptiveHeuristic2(Fan &fan) : Heuristic(fan), disturber(Disturber(fan)) {}
+Buttons buttons;
 
-void AdaptiveHeuristic2::update(int humidity) {
-  samples.push_back(humidity);
-
-  if (samples.size() == prefs.storage.noSamples) {
-    double mean, stdDev;
-    calcMeanAndStdDev(mean, stdDev);
-
-    fan.shouldRun = significantDiff(mean, baseMean);// or significantDiff(stdDev, baseStdDev);
-    baseMean = mean;
-    baseStdDev = stdDev;
-
-    samples.clear();
-  }
-
-  //random environment trigger changer
-  if (prefs.storage.useDisturber != 0) {
-  	disturber.update(humidity);
-  }
+Buttons::Buttons() {
+	button1.begin();
+	button2.begin();
 }
 
-void AdaptiveHeuristic2::calcMeanAndStdDev(double &mean, double &stdev) {
-  mean = std::accumulate(samples.begin(), samples.end(), 0.0) / samples.size();
-
-  double accum = 0.0;
-  for(auto i = samples.begin(); i != samples.end(); i++) {
-    accum += (*i - mean) * (*i - mean);
-  };
-
-  stdev = sqrt(accum / (samples.size()-1));
+Buttons::~Buttons() {
 }
 
-bool AdaptiveHeuristic2::significantDiff(double val1, double val2) {
-  val1 = val1 == 0 ? 1 : val1;
-  val1 = (val2 * 100 / val1);
-  val1 = abs(val1 - 100);
-  return val1 > 3;
+void Buttons::update() {
+	button1.read();
+	button2.read();
+
+	if (button1.wasPressed()) {
+		doFactorySettings();
+	}
+}
+
+void Buttons::doFactorySettings() {
+	prefs.defaultValues();
+	prefs.save();
+	ESP.reset();
 }

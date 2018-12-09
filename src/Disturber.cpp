@@ -3,7 +3,7 @@
 //
 
 #include "Disturber.h"
-#include "Prefs.h"
+#include "misc/Prefs.h"
 
 Disturber::Disturber(Fan& fan) : fan(fan) {}
 

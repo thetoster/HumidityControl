@@ -29,15 +29,52 @@
  OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
- LimiterHeuristic.cpp
- Created on: Jul 18, 2018
+ AdaptiveHeuristic2.cpp
+ Created on: Jul 19, 2018
  Author: Bartłomiej Żarnowski (Toster)
  */
-#include "LimiterHeuristic.h"
-#include "Prefs.h"
 
-LimiterHeuristic::LimiterHeuristic(Fan &fan) : Heuristic(fan) {}
+#include "AdaptiveHeuristic2.h"
+#include "misc/Prefs.h"
+#include <numeric>
+#include <algorithm>
 
-void LimiterHeuristic::update(int humidity) {
-  fan.shouldRun = (humidity > prefs.storage.humidityTrigger);
+AdaptiveHeuristic2::AdaptiveHeuristic2(Fan &fan) : Heuristic(fan), disturber(Disturber(fan)) {}
+
+void AdaptiveHeuristic2::update(int humidity) {
+  samples.push_back(humidity);
+
+  if (samples.size() == prefs.storage.noSamples) {
+    double mean, stdDev;
+    calcMeanAndStdDev(mean, stdDev);
+
+    fan.shouldRun = significantDiff(mean, baseMean);// or significantDiff(stdDev, baseStdDev);
+    baseMean = mean;
+    baseStdDev = stdDev;
+
+    samples.clear();
+  }
+
+  //random environment trigger changer
+  if (prefs.storage.useDisturber != 0) {
+  	disturber.update(humidity);
+  }
+}
+
+void AdaptiveHeuristic2::calcMeanAndStdDev(double &mean, double &stdev) {
+  mean = std::accumulate(samples.begin(), samples.end(), 0.0) / samples.size();
+
+  double accum = 0.0;
+  for(auto i = samples.begin(); i != samples.end(); i++) {
+    accum += (*i - mean) * (*i - mean);
+  };
+
+  stdev = sqrt(accum / (samples.size()-1));
+}
+
+bool AdaptiveHeuristic2::significantDiff(double val1, double val2) {
+  val1 = val1 == 0 ? 1 : val1;
+  val1 = (val2 * 100 / val1);
+  val1 = abs(val1 - 100);
+  return val1 > 3;
 }

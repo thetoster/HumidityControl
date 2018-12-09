@@ -40,7 +40,7 @@
 #include <ESP8266WebServer.h>
 #include <ArduinoJson.h>
 #include "EnvLogic.h"
-#include "Prefs.h"
+#include "misc/Prefs.h"
 #include "Updater.h"
 #include <sha256.h>
 

@@ -29,33 +29,48 @@
  OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
- NiceToHaveHeuristic.cpp
- Created on: Jul 18, 2018
+ Fan.cpp
+ Created on: Jul 17, 2018
  Author: Bartłomiej Żarnowski (Toster)
  */
-#include "NiceToHaveHeuristic.h"
-#include "Prefs.h"
 
-NiceToHaveHeuristic::NiceToHaveHeuristic(Fan &fan) : Heuristic(fan), disturber(Disturber(fan)) {}
+#include "periphery/Fan.h"
+#include "misc/Prefs.h"
 
-void NiceToHaveHeuristic::update(int humidity) {
+Fan::Fan(uint8_t pin) : shouldRun(false), lastTurnOn(0), lastTurnOff(0), pin(pin), running(false) {
+  pinMode(pin, OUTPUT);
+  digitalWrite(pin, LOW);
+}
 
-  fan.shouldRun = abs(humidity - minKnowHum) > prefs.storage.knownHumDiffTrigger;
+void Fan::setFan(bool enabled) {
+	running = enabled;
+	Serial.println(enabled ? "Fan:ON" : "Fan:OFF");
+	digitalWrite(pin, enabled ? HIGH : LOW);
+}
 
-  if (minKnowHum > humidity) {
-    minKnowHum = humidity;
-    time = 0;
+void Fan::update() {
+	if (shouldRun) {
+		if ((not running) && (not tooEarly(lastTurnOff, prefs.storage.muteFanOn))) {
+			lastTurnOn = millis();
+			setFan(true);
+		}
 
-  } else {
-    time ++;
+	} else {
+		if (running && (not tooEarly(lastTurnOn, prefs.storage.muteFanOff))) {
+			lastTurnOff = millis();
+			setFan(false);
+		}
+	}
+}
 
-    if (time >= prefs.storage.timeToForget) {
-      time = 0;
-      minKnowHum = (minKnowHum + humidity) / 2;
-    }
-  }
+bool Fan::tooEarly(unsigned long timestamp, uint8_t sec) {
+	return millis() < (timestamp + 1000 * sec);
+}
 
-  if (prefs.storage.useDisturber != 0) {
-  	disturber.update(humidity);
-  }
+bool Fan::isRunning() const {
+	return running;
+}
+
+unsigned long Fan::getTurnOnFanMillis() const {
+	return running ? lastTurnOn : 0;
 }

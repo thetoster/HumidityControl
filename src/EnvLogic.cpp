@@ -34,11 +34,11 @@
  Author: Bartłomiej Żarnowski (Toster)
  */
 #include <EnvLogic.h>
-#include "Prefs.h"
-#include "AdaptiveHeuristic.h"
-#include "AdaptiveHeuristic2.h"
-#include "LimiterHeuristic.h"
-#include "NiceToHaveHeuristic.h"
+#include "misc/Prefs.h"
+#include "heuristic/AdaptiveHeuristic.h"
+#include "heuristic/AdaptiveHeuristic2.h"
+#include "heuristic/LimiterHeuristic.h"
+#include "heuristic/NiceToHaveHeuristic.h"
 
 static constexpr int totalMeasurementMemoryLimit = 4 * 1024;
 static constexpr float ETA = 0.9;

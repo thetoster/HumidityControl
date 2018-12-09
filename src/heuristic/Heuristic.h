@@ -29,36 +29,23 @@
  OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
- Buttons.cpp
- Created on: Jul 17, 2018
+ Heuristic.h
+ Created on: Jul 18, 2018
  Author: Bartłomiej Żarnowski (Toster)
  */
+#ifndef HEURY_HEURISTIC_H
+#define HEURY_HEURISTIC_H
 
-#include "Prefs.h"
-#include "Buttons.h"
-#include <Arduino.h>
+#include "periphery/Fan.h"
 
-Buttons buttons;
+class Heuristic {
+  public:
+    Heuristic(Fan& fan) : fan(fan) {}
+    virtual ~Heuristic() = default;
+    virtual void update(int humidity) = 0;
+  protected:
+    Fan& fan;
+};
 
-Buttons::Buttons() {
-	button1.begin();
-	button2.begin();
-}
 
-Buttons::~Buttons() {
-}
-
-void Buttons::update() {
-	button1.read();
-	button2.read();
-
-	if (button1.wasPressed()) {
-		doFactorySettings();
-	}
-}
-
-void Buttons::doFactorySettings() {
-	prefs.defaultValues();
-	prefs.save();
-	ESP.reset();
-}
+#endif //HEURY_HEURISTIC_H

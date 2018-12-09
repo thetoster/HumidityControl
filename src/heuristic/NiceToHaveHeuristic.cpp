@@ -29,50 +29,33 @@
  OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
- AdaptiveHeuristic.cpp
+ NiceToHaveHeuristic.cpp
  Created on: Jul 18, 2018
  Author: Bartłomiej Żarnowski (Toster)
  */
+#include "NiceToHaveHeuristic.h"
+#include "misc/Prefs.h"
 
-#include "AdaptiveHeuristic.h"
-#include "Prefs.h"
-#include <numeric>
-#include <algorithm>
+NiceToHaveHeuristic::NiceToHaveHeuristic(Fan &fan) : Heuristic(fan), disturber(Disturber(fan)) {}
 
-AdaptiveHeuristic::AdaptiveHeuristic(Fan &fan) : Heuristic(fan), disturber(Disturber(fan)) {}
+void NiceToHaveHeuristic::update(int humidity) {
 
-void AdaptiveHeuristic::update(int humidity) {
-  samples.push_back(humidity);
+  fan.shouldRun = abs(humidity - minKnowHum) > prefs.storage.knownHumDiffTrigger;
 
-  if (samples.size() == prefs.storage.noSamples) {
-    double mean, stdDev;
-    calcMeanAndStdDev(mean, stdDev);
+  if (minKnowHum > humidity) {
+    minKnowHum = humidity;
+    time = 0;
 
-    fan.shouldRun = significantMeanChange(mean, stdDev);
-    baseMean = mean;
-    baseStdDev = stdDev;
+  } else {
+    time ++;
 
-    samples.clear();
+    if (time >= prefs.storage.timeToForget) {
+      time = 0;
+      minKnowHum = (minKnowHum + humidity) / 2;
+    }
   }
 
-  //random environment trigger changer
   if (prefs.storage.useDisturber != 0) {
   	disturber.update(humidity);
   }
-}
-
-void AdaptiveHeuristic::calcMeanAndStdDev(double &mean, double &stdev) {
-  mean = std::accumulate(samples.begin(), samples.end(), 0.0) / samples.size();
-
-  double accum = 0.0;
-  for(auto i = samples.begin(); i != samples.end(); i++) {
-    accum += (*i - mean) * (*i - mean);
-  };
-
-  stdev = sqrt(accum / (samples.size()-1));
-}
-
-bool AdaptiveHeuristic::significantMeanChange(double mean, double stdDev) {
-  double ss = baseStdDev < 0.1 ? baseMean / 12 : baseStdDev;
-  return (abs(mean - baseMean) > 2 * ss);
 }

@@ -37,9 +37,9 @@
 #define EnvLogic_hpp
 
 #include "Measurement.h"
-#include "Fan.h"
-#include "Heuristic.h"
-#include <SHT21.h>
+#include "periphery/Fan.h"
+#include "heuristic/Heuristic.h"
+#include "periphery/SHT21.h"
 #include <vector>
 
 class EnvLogic {

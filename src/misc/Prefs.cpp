@@ -33,7 +33,7 @@
  Created on: Dec 27, 2017
  Author: Bartłomiej Żarnowski (Toster)
  */
-#include <Prefs.h>
+#include "misc/Prefs.h"
 #include <EEPROM.h>
 
 Prefs prefs;
